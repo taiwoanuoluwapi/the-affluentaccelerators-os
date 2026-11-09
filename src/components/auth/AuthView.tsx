@@ -14,7 +14,11 @@ import {
   FileSpreadsheet
 } from 'lucide-react';
 
-export const AuthView: React.FC = () => {
+interface AuthViewProps {
+  onOpenOnboarding?: () => void;
+}
+
+export const AuthView: React.FC<AuthViewProps> = ({ onOpenOnboarding }) => {
   const { login, signup, users } = useApp();
 
   const [mode, setMode] = useState<'login' | 'signup' | 'forgot'>('login');

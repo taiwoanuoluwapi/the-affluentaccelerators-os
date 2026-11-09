@@ -51,7 +51,31 @@ export const App: React.FC = () => {
   const [isGoogleModalOpen, setIsGoogleModalOpen] = useState(false);
   const [isNewProjectOpen, setIsNewProjectOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [isPublicOnboardingOpen, setIsPublicOnboardingOpen] = useState(false);
+  const [invitePrefill, setInvitePrefill] = useState<{ token: string; email: string; role: UserRole }>({
+    token: '',
+    email: '',
+    role: 'sales_rep'
+  });
   const [dealForProject, setDealForProject] = useState<any>(null);
+
+  // Check for email invite URL parameters on load
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const inviteToken = params.get('invite');
+      const email = params.get('email');
+      const role = params.get('role');
+      if (inviteToken || email) {
+        setIsPublicOnboardingOpen(true);
+        setInvitePrefill({
+          token: inviteToken || '',
+          email: email || '',
+          role: (role as UserRole) || 'sales_rep'
+        });
+      }
+    }
+  }, []);
 
   // Follow-up modal helper
   const handleScheduleFollowUpFromInquiry = (targetName: string, relatedId: string) => {
@@ -69,9 +93,20 @@ export const App: React.FC = () => {
     setIsNewProjectOpen(true);
   };
 
-  // If not authenticated, show full screen Staff Sign In / Sign Up view
+  // If not authenticated, show full screen Staff Sign In / Sign Up view with option to open public onboarding form
   if (!isAuthenticated) {
-    return <AuthView />;
+    return (
+      <>
+        <AuthView onOpenOnboarding={() => setIsPublicOnboardingOpen(true)} />
+        <PublicOnboardingFormModal
+          isOpen={isPublicOnboardingOpen}
+          onClose={() => setIsPublicOnboardingOpen(false)}
+          prefillEmail={invitePrefill.email}
+          prefillRole={invitePrefill.role}
+          inviteToken={invitePrefill.token}
+        />
+      </>
+    );
   }
 
   return (
