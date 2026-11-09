@@ -185,6 +185,19 @@ export const AuthView: React.FC<AuthViewProps> = ({ onOpenOnboarding }) => {
                   <span>{loading ? 'Authenticating...' : 'Sign In to AffluentOS'}</span>
                   <ArrowRight size={15} />
                 </button>
+
+                {onOpenOnboarding && (
+                  <div className="pt-2 text-center border-t border-slate-100">
+                    <button
+                      type="button"
+                      onClick={onOpenOnboarding}
+                      className="text-xs font-semibold text-emerald-800 hover:text-emerald-950 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-3 py-1.5 rounded-lg transition-colors cursor-pointer inline-flex items-center space-x-1.5"
+                    >
+                      <Sparkles size={13} className="text-emerald-600" />
+                      <span>Invited to Join? Complete Onboarding Form →</span>
+                    </button>
+                  </div>
+                )}
               </form>
             )}
 
