@@ -160,6 +160,8 @@ export const App: React.FC = () => {
               />
             )}
 
+            {currentTab === 'onboarding' && <UserOnboardingView />}
+
             {currentTab === 'pipeline' && (
               <PipelineBoard
                 onSelectDeal={id => setSelectedDealId(id)}
@@ -285,6 +287,15 @@ export const App: React.FC = () => {
       <UserProfileModal
         isOpen={isProfileModalOpen}
         onClose={() => setIsProfileModalOpen(false)}
+      />
+
+      {/* Public Onboarding Form Modal (Invitee Form) */}
+      <PublicOnboardingFormModal
+        isOpen={isPublicOnboardingOpen}
+        onClose={() => setIsPublicOnboardingOpen(false)}
+        prefillEmail={invitePrefill.email}
+        prefillRole={invitePrefill.role}
+        inviteToken={invitePrefill.token}
       />
     </div>
   );

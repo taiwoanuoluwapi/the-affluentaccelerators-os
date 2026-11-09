@@ -222,23 +222,32 @@ export const GoogleIntegrationModal: React.FC<GoogleIntegrationModalProps> = ({ 
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                   <div>
-                    <label className="text-[11px] font-bold text-slate-600 block mb-1">Worksheet Name</label>
+                    <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Tab 1: Leads</label>
                     <input
                       type="text"
                       readOnly
                       value={googleSettings.sheetName}
-                      className="w-full p-2 bg-white border border-slate-200 rounded-lg text-slate-700 font-mono text-xs"
+                      className="w-full p-2 bg-white border border-slate-200 rounded-lg text-slate-700 font-mono text-[11px]"
                     />
                   </div>
                   <div>
-                    <label className="text-[11px] font-bold text-slate-600 block mb-1">Drive Folder Destination</label>
+                    <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Tab 2: Onboarding (Boolean)</label>
                     <input
                       type="text"
                       readOnly
-                      value={googleSettings.driveFolderName}
-                      className="w-full p-2 bg-white border border-slate-200 rounded-lg text-slate-700 font-mono text-xs"
+                      value={googleSettings.onboardingSheetName || 'User Onboarding & Approvals'}
+                      className="w-full p-2 bg-white border border-slate-200 rounded-lg text-emerald-800 font-mono text-[11px] font-semibold"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Tab 3: Contact Tasks</label>
+                    <input
+                      type="text"
+                      readOnly
+                      value={googleSettings.tasksSheetName || 'Role-Based Contact Tasks'}
+                      className="w-full p-2 bg-white border border-slate-200 rounded-lg text-slate-700 font-mono text-[11px]"
                     />
                   </div>
                 </div>
