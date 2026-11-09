@@ -237,9 +237,9 @@ export const ExecutiveDashboard: React.FC<DashboardProps> = ({
               <TrendingUp size={15} />
             </div>
           </div>
-          <div className="mt-2 flex items-baseline justify-between">
-            <span className="text-2xl font-extrabold text-slate-800">{kpis.qualifiedLeads}</span>
-            <span className="text-[11px] font-semibold text-sky-600 bg-sky-50 px-1.5 py-0.5 rounded">
+          <div className="mt-2 flex items-baseline justify-between gap-1">
+            <span className="text-lg sm:text-xl lg:text-2xl font-extrabold text-slate-800 font-mono truncate">{kpis.qualifiedLeads}</span>
+            <span className="text-[10px] sm:text-[11px] font-semibold text-sky-600 bg-sky-50 px-1.5 py-0.5 rounded shrink-0">
               {kpis.activeProspects} prospects
             </span>
           </div>
@@ -257,13 +257,13 @@ export const ExecutiveDashboard: React.FC<DashboardProps> = ({
               <GitBranch size={15} />
             </div>
           </div>
-          <div className="mt-2 flex items-baseline justify-between">
-            <span className="text-2xl font-extrabold text-slate-800">{kpis.activeOpportunities}</span>
-            <span className="text-[11px] font-semibold text-purple-700 bg-purple-50 px-1.5 py-0.5 rounded font-mono">
+          <div className="mt-2 flex items-baseline justify-between gap-1">
+            <span className="text-lg sm:text-xl lg:text-2xl font-extrabold text-slate-800 font-mono truncate">{kpis.activeOpportunities}</span>
+            <span className="text-[10px] sm:text-[11px] font-semibold text-purple-700 bg-purple-50 px-1.5 py-0.5 rounded font-mono truncate shrink-0 max-w-[110px]">
               {formatCurrency(kpis.pipelineTotalValue)}
             </span>
           </div>
-          <span className="text-[11px] text-slate-400 mt-1 block">Weighted: {formatCurrency(Math.round(kpis.weightedPipelineValue))}</span>
+          <span className="text-[11px] text-slate-400 mt-1 block truncate">Weighted: {formatCurrency(Math.round(kpis.weightedPipelineValue))}</span>
         </div>
 
         {/* Closed Won Revenue */}
@@ -278,7 +278,7 @@ export const ExecutiveDashboard: React.FC<DashboardProps> = ({
             </div>
           </div>
           <div className="mt-2 flex items-baseline justify-between">
-            <span className="text-2xl font-extrabold text-emerald-700">{formatCurrency(kpis.totalWonRevenue)}</span>
+            <span className="text-base sm:text-lg lg:text-xl font-extrabold text-emerald-700 font-mono truncate">{formatCurrency(kpis.totalWonRevenue)}</span>
           </div>
           <div className="flex items-center justify-between mt-1 text-[11px] text-slate-400">
             <span>{kpis.closedDealsWonCount} won</span>
@@ -289,17 +289,17 @@ export const ExecutiveDashboard: React.FC<DashboardProps> = ({
         {/* Consulting Projects & Follow-ups */}
         <div
           onClick={() => setCurrentTab('activities')}
-          className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs hover:border-emerald-300 transition-all cursor-pointer group"
+          className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs hover:border-emerald-300 transition-all cursor-pointer group col-span-2 sm:col-span-1"
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-500">Follow-ups & Engagements</span>
+            <span className="text-xs font-semibold text-slate-500">Engagements</span>
             <div className="w-7 h-7 rounded-lg bg-rose-50 text-rose-700 flex items-center justify-center group-hover:scale-110 transition-transform">
               <Calendar size={15} />
             </div>
           </div>
-          <div className="mt-2 flex items-baseline justify-between">
-            <span className="text-2xl font-extrabold text-slate-800">{kpis.activeProjects}</span>
-            <span className="text-[11px] font-semibold text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded">
+          <div className="mt-2 flex items-baseline justify-between gap-1">
+            <span className="text-lg sm:text-xl lg:text-2xl font-extrabold text-slate-800 font-mono truncate">{kpis.activeProjects} active</span>
+            <span className="text-[10px] sm:text-[11px] font-semibold text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded shrink-0">
               {kpis.overdueFollowUpsCount} overdue
             </span>
           </div>
