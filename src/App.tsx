@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useApp } from './context/AppContext';
 import { Sidebar } from './components/layout/Sidebar';
 import { TopNav } from './components/layout/TopNav';
+import { MobileBottomNav } from './components/layout/MobileBottomNav';
 import { ExecutiveDashboard } from './components/dashboard/ExecutiveDashboard';
 import { InquiriesList } from './components/inquiries/InquiriesList';
 import { InquiryDetailModal } from './components/inquiries/InquiryDetailModal';
@@ -24,9 +25,11 @@ import { NotificationsView } from './components/notifications/NotificationsView'
 import { SettingsView } from './components/settings/SettingsView';
 import { GoogleIntegrationModal } from './components/google/GoogleIntegrationModal';
 import { GlobalSearchResults } from './components/common/GlobalSearchResults';
+import { AuthView } from './components/auth/AuthView';
+import { UserProfileModal } from './components/auth/UserProfileModal';
 
 export const App: React.FC = () => {
-  const { inquiries, deals } = useApp();
+  const { inquiries, deals, isAuthenticated } = useApp();
 
   const [currentTab, setCurrentTab] = useState<string>('overview');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -44,6 +47,7 @@ export const App: React.FC = () => {
   const [isLogActivityOpen, setIsLogActivityOpen] = useState(false);
   const [isGoogleModalOpen, setIsGoogleModalOpen] = useState(false);
   const [isNewProjectOpen, setIsNewProjectOpen] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [dealForProject, setDealForProject] = useState<any>(null);
 
   // Follow-up modal helper
@@ -62,9 +66,14 @@ export const App: React.FC = () => {
     setIsNewProjectOpen(true);
   };
 
+  // If not authenticated, show full screen Staff Sign In / Sign Up view
+  if (!isAuthenticated) {
+    return <AuthView />;
+  }
+
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-[#f8fafc] font-sans">
-      {/* Collapsible Left Sidebar */}
+      {/* Responsive Left Sidebar */}
       <Sidebar
         currentTab={currentTab}
         setCurrentTab={setCurrentTab}
@@ -74,7 +83,7 @@ export const App: React.FC = () => {
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        {/* Top Navigation */}
+        {/* Top Navigation Bar with Mobile Hamburger & Profile Access */}
         <TopNav
           currentTab={currentTab}
           setCurrentTab={setCurrentTab}
@@ -83,11 +92,12 @@ export const App: React.FC = () => {
           onOpenNewContact={() => setIsNewContactOpen(true)}
           onOpenLogActivity={() => setIsLogActivityOpen(true)}
           onOpenGoogleModal={() => setIsGoogleModalOpen(true)}
+          onOpenProfileModal={() => setIsProfileModalOpen(true)}
         />
 
         {/* View Router */}
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 scrollbar-thin scrollbar-thumb-slate-300">
-          <div className="max-w-7xl mx-auto pb-12">
+        <main className="flex-1 overflow-y-auto p-3 sm:p-5 lg:p-7 scrollbar-thin scrollbar-thumb-slate-300">
+          <div className="max-w-7xl mx-auto pb-20 md:pb-12">
             {currentTab === 'overview' && (
               <ExecutiveDashboard
                 onSelectInquiry={id => setSelectedInquiryId(id)}
@@ -157,6 +167,12 @@ export const App: React.FC = () => {
         </main>
       </div>
 
+      {/* Mobile Bottom Navigation Bar (Phone Users) */}
+      <MobileBottomNav
+        currentTab={currentTab}
+        setCurrentTab={setCurrentTab}
+      />
+
       {/* Global Search Results Overlay */}
       <GlobalSearchResults
         onSelectInquiry={id => setSelectedInquiryId(id)}
@@ -225,6 +241,12 @@ export const App: React.FC = () => {
       <GoogleIntegrationModal
         isOpen={isGoogleModalOpen}
         onClose={() => setIsGoogleModalOpen(false)}
+      />
+
+      {/* User Profile & Security Modal */}
+      <UserProfileModal
+        isOpen={isProfileModalOpen}
+        onClose={() => setIsProfileModalOpen(false)}
       />
     </div>
   );
