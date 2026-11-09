@@ -226,6 +226,13 @@ export const TopNav: React.FC<TopNavProps> = ({
                 <div className="w-2 h-2 rounded-full bg-purple-500"></div>
                 <span>Add Contact / Client</span>
               </button>
+              <button
+                onClick={() => setCurrentTab('onboarding')}
+                className="w-full text-left px-3.5 py-2 text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 flex items-center space-x-2"
+              >
+                <div className="w-2 h-2 rounded-full bg-indigo-500"></div>
+                <span>Invite / Onboard User</span>
+              </button>
               <div className="border-t border-slate-100 my-1"></div>
               <button
                 onClick={onOpenGoogleModal}
