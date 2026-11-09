@@ -15,9 +15,11 @@ import {
   Plus,
   Send,
   ExternalLink,
-  DollarSign
+  DollarSign,
+  CheckSquare
 } from 'lucide-react';
 import { formatDate, formatDateTime, formatCurrency } from '../../utils/formatters';
+import { ContactTasksSection } from './ContactTasksSection';
 
 interface ContactDetailModalProps {
   contactId: string | null;
@@ -32,9 +34,9 @@ export const ContactDetailModal: React.FC<ContactDetailModalProps> = ({
   onOpenNewDeal,
   onLogActivity
 }) => {
-  const { contacts, deals, projects, activities, users, updateContact } = useApp();
+  const { contacts, deals, projects, activities, users, updateContact, contactRoleTasks } = useApp();
 
-  const [activeTab, setActiveTab] = useState<'timeline' | 'deals' | 'projects' | 'notes'>('timeline');
+  const [activeTab, setActiveTab] = useState<'timeline' | 'tasks' | 'deals' | 'projects' | 'notes'>('timeline');
   const [noteText, setNoteText] = useState('');
 
   if (!contactId) return null;
@@ -48,6 +50,7 @@ export const ContactDetailModal: React.FC<ContactDetailModalProps> = ({
   const contactActivities = activities.filter(
     a => a.relatedType === 'contact' && a.relatedId === contact.id
   );
+  const contactTasks = contactRoleTasks.filter(t => t.contactId === contact.id);
 
   const handleAddNote = (e: React.FormEvent) => {
     e.preventDefault();
