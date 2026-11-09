@@ -13,7 +13,11 @@ import {
   AuditLogEntry,
   SyncLog,
   GoogleIntegrationSettings,
-  PipelineStage
+  PipelineStage,
+  OnboardingSubmission,
+  UserInvitation,
+  ContactRoleTask,
+  SupabaseConfig
 } from '../types';
 
 export const INITIAL_USERS: User[] = [
