@@ -1365,8 +1365,10 @@ export const INITIAL_GOOGLE_SETTINGS: GoogleIntegrationSettings = {
   connected: true,
   googleAccount: 'integrations@affluentaccelerators.com (The Affluentaccelerators Workspace)',
   spreadsheetId: '1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms',
-  spreadsheetName: 'The Affluentaccelerators - Website Leads & Diagnostic Inquiries 2026',
+  spreadsheetName: 'The Affluentaccelerators - Client Operations & Onboarding 2026',
   sheetName: 'Website Form Submissions 2026',
+  onboardingSheetName: 'User Onboarding & Approvals',
+  tasksSheetName: 'Role-Based Contact Tasks',
   driveFolderId: '1a9ZkLQ7-9092_Affluent_Diagnostic_Vault',
   driveFolderName: 'AffluentOS Website Submissions & Client Diagnostic Files',
   lastSyncedAt: '2026-11-09T11:46:30Z',
@@ -1394,3 +1396,212 @@ export const INITIAL_GOOGLE_SETTINGS: GoogleIntegrationSettings = {
     'Drive File Attachment Links': 'supportingDocuments'
   }
 };
+
+export const INITIAL_SUPABASE_CONFIG: SupabaseConfig = {
+  connected: true,
+  projectUrl: 'https://vkwubtxvqlmnoyz.supabase.co',
+  anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZrd3VidHh2cWxtbm95eiIsInJvbGUiOiJhbm9uIiwiaWF0IjoxNzM4ODAwMDAwLCJleHAiOjIwNTQxNjAwMDB9.s_AFFLUENT_SECURE_TOKEN_2026',
+  authMethod: 'email_password',
+  rlsEnforced: true,
+  tables: {
+    users: 'public.profiles',
+    contacts: 'public.crm_contacts',
+    onboarding: 'public.user_onboarding_requests',
+    tasks: 'public.contact_role_tasks'
+  }
+};
+
+export const INITIAL_USER_INVITATIONS: UserInvitation[] = [
+  {
+    id: 'inv_001',
+    email: 'k.adebayo@affluentaccelerators.com',
+    role: 'sales_rep',
+    department: 'Commercial Growth',
+    token: 'tok_affluent_sales_89f2',
+    inviteUrl: 'https://antigravity.luch.dev/site/40b4be73-a887-4b81-81eb-ebca7696f21e/a53f7e4028b7f34005ed6843/?invite=tok_affluent_sales_89f2&email=k.adebayo%40affluentaccelerators.com&role=sales_rep',
+    invitedBy: 'Dr. Chukwuma Eze (Founder)',
+    invitedAt: '2026-11-08T09:00:00Z',
+    expiresAt: '2026-11-15T09:00:00Z',
+    status: 'submitted',
+    customNotes: 'Experienced Enterprise B2B SaaS and FMCG sales closer.'
+  },
+  {
+    id: 'inv_002',
+    email: 'b.oluwole@affluentadvisory.ng',
+    role: 'consultant',
+    department: 'Advisory & Consulting',
+    token: 'tok_affluent_adv_71b9',
+    inviteUrl: 'https://antigravity.luch.dev/site/40b4be73-a887-4b81-81eb-ebca7696f21e/a53f7e4028b7f34005ed6843/?invite=tok_affluent_adv_71b9&email=b.oluwole%40affluentadvisory.ng&role=consultant',
+    invitedBy: 'Amina Bello (Operations)',
+    invitedAt: '2026-11-09T08:30:00Z',
+    expiresAt: '2026-11-16T08:30:00Z',
+    status: 'pending',
+    customNotes: 'Joining as Senior Supply Chain & Operations Diagnostics Consultant.'
+  },
+  {
+    id: 'inv_003',
+    email: 'chidi.okafor@affluentpartners.org',
+    role: 'bd_manager',
+    department: 'Commercial Growth',
+    token: 'tok_affluent_bd_33c4',
+    inviteUrl: 'https://antigravity.luch.dev/site/40b4be73-a887-4b81-81eb-ebca7696f21e/a53f7e4028b7f34005ed6843/?invite=tok_affluent_bd_33c4&email=chidi.okafor%40affluentpartners.org&role=bd_manager',
+    invitedBy: 'Tunde Adeyemi (Head of BD)',
+    invitedAt: '2026-11-09T14:00:00Z',
+    expiresAt: '2026-11-16T14:00:00Z',
+    status: 'submitted',
+    customNotes: 'West Africa expansion specialist.'
+  }
+];
+
+export const INITIAL_ONBOARDING_SUBMISSIONS: OnboardingSubmission[] = [
+  {
+    id: 'onb_001',
+    inviteToken: 'tok_affluent_sales_89f2',
+    fullName: 'Kehinde Adebayo',
+    email: 'k.adebayo@affluentaccelerators.com',
+    phone: '+234 813 445 6789',
+    requestedRole: 'sales_rep',
+    department: 'Commercial Growth',
+    bio: 'Ex-Andela senior account executive with 6 years closing enterprise training and commercial contracts across Nigeria and Kenya.',
+    linkedinUrl: 'https://linkedin.com/in/kehinde-adebayo-sales',
+    approvalStatus: 'unapproved', // Boolean status on the Google Sheet
+    approvalNotes: 'Awaiting founder final vetting on compensation tier before sheet toggle.',
+    invitedBy: 'Dr. Chukwuma Eze (Founder)',
+    invitedAt: '2026-11-08T09:00:00Z',
+    submittedAt: '2026-11-08T11:24:00Z',
+    googleSheetRowIndex: 4,
+    googleSheetTab: 'User Onboarding & Approvals',
+    syncedToSupabase: true,
+    syncedToGoogleSheet: true
+  },
+  {
+    id: 'onb_002',
+    inviteToken: 'tok_affluent_bd_33c4',
+    fullName: 'Chidi Okafor',
+    email: 'chidi.okafor@affluentpartners.org',
+    phone: '+234 802 911 3456',
+    requestedRole: 'bd_manager',
+    department: 'Commercial Growth',
+    bio: 'Business development strategist specializing in manufacturing conglomerates and agro-allied partnership deals.',
+    linkedinUrl: 'https://linkedin.com/in/chidi-okafor-bd',
+    approvalStatus: 'unapproved',
+    approvalNotes: 'Profile complete. Reference check pending from Dangote contact.',
+    invitedBy: 'Tunde Adeyemi (Head of BD)',
+    invitedAt: '2026-11-09T14:00:00Z',
+    submittedAt: '2026-11-09T15:10:00Z',
+    googleSheetRowIndex: 5,
+    googleSheetTab: 'User Onboarding & Approvals',
+    syncedToSupabase: true,
+    syncedToGoogleSheet: true
+  },
+  {
+    id: 'onb_003',
+    inviteToken: 'tok_affluent_adv_22a1',
+    fullName: 'Zainab Danjuma',
+    email: 'z.danjuma@affluentaccelerators.com',
+    phone: '+234 809 888 2341',
+    requestedRole: 'consultant',
+    department: 'Advisory & Consulting',
+    bio: 'Chartered Financial Analyst and business diagnostics consultant with PwC alumni background.',
+    linkedinUrl: 'https://linkedin.com/in/zainab-danjuma-cfa',
+    approvalStatus: 'approved',
+    approvalNotes: 'Approved directly on Google Sheet (Row 3, changed cell J3 from unapproved to approved). Supabase account active.',
+    invitedBy: 'Dr. Chukwuma Eze (Founder)',
+    invitedAt: '2026-11-05T10:00:00Z',
+    submittedAt: '2026-11-05T14:30:00Z',
+    approvedAt: '2026-11-06T09:15:00Z',
+    approvedBy: 'Dr. Chukwuma Eze (via Google Sheet onEdit trigger)',
+    googleSheetRowIndex: 3,
+    googleSheetTab: 'User Onboarding & Approvals',
+    syncedToSupabase: true,
+    syncedToGoogleSheet: true
+  }
+];
+
+export const INITIAL_CONTACT_ROLE_TASKS: ContactRoleTask[] = [
+  {
+    id: 'crt_001',
+    contactId: 'ctc_001',
+    contactName: 'Folashade Adele',
+    businessName: 'OmniChain Logistics Ltd',
+    title: 'Commercial Proposal & Pricing Presentation',
+    description: 'Prepare tailored enterprise diagnostics pricing model and review logistics fleet optimization deliverables.',
+    assignedRole: 'sales_rep',
+    assignedUserId: 'usr_sales_rep',
+    assignedUserName: 'Chioma Okafor',
+    dueDate: '2026-11-11',
+    priority: 'high',
+    status: 'in_progress',
+    googleSheetRowIndex: 2,
+    googleSheetTab: 'Role-Based Contact Tasks',
+    createdAt: '2026-11-08T10:00:00Z'
+  },
+  {
+    id: 'crt_002',
+    contactId: 'ctc_001',
+    contactName: 'Folashade Adele',
+    businessName: 'OmniChain Logistics Ltd',
+    title: 'Fleet Operations Diagnostic Audit & Route Analysis',
+    description: 'Conduct on-site operational interview at Lekki distribution hub and examine telematics data.',
+    assignedRole: 'consultant',
+    assignedUserId: 'usr_consultant_lead',
+    assignedUserName: 'David Adeleke',
+    dueDate: '2026-11-14',
+    priority: 'urgent',
+    status: 'todo',
+    googleSheetRowIndex: 3,
+    googleSheetTab: 'Role-Based Contact Tasks',
+    createdAt: '2026-11-08T10:30:00Z'
+  },
+  {
+    id: 'crt_003',
+    contactId: 'ctc_002',
+    contactName: 'Oluwaseun Banjo',
+    businessName: 'PayHarvest Fintech Solutions',
+    title: 'Sales Compensation Benchmark & Incentive Scheme Review',
+    description: 'Assess current fintech sales rep commission tiers and draft high-performance incentive blueprint.',
+    assignedRole: 'sales_rep',
+    assignedUserId: 'usr_sales_rep',
+    assignedUserName: 'Chioma Okafor',
+    dueDate: '2026-11-13',
+    priority: 'medium',
+    status: 'todo',
+    googleSheetRowIndex: 4,
+    googleSheetTab: 'Role-Based Contact Tasks',
+    createdAt: '2026-11-09T09:00:00Z'
+  },
+  {
+    id: 'crt_004',
+    contactId: 'ctc_003',
+    contactName: 'Dr. Halima Dantata',
+    businessName: 'Zaria Agro-Allied Processing Mills',
+    title: 'Export Quality & Plant Capacity Due Diligence Review',
+    description: 'Review grain processing throughput metrics and export quarantine certifications.',
+    assignedRole: 'consultant',
+    assignedUserId: 'usr_analyst',
+    assignedUserName: 'Ngozi Nwosu',
+    dueDate: '2026-11-16',
+    priority: 'high',
+    status: 'todo',
+    googleSheetRowIndex: 5,
+    googleSheetTab: 'Role-Based Contact Tasks',
+    createdAt: '2026-11-09T11:00:00Z'
+  },
+  {
+    id: 'crt_005',
+    contactId: 'ctc_003',
+    contactName: 'Dr. Halima Dantata',
+    businessName: 'Zaria Agro-Allied Processing Mills',
+    title: 'Executive Partnership Agreement & Retainer Finalization',
+    description: 'Founder-to-MD strategic engagement regarding multi-year advisory retainer.',
+    assignedRole: 'super_admin',
+    assignedUserId: 'usr_founder',
+    assignedUserName: 'Dr. Chukwuma Eze',
+    dueDate: '2026-11-12',
+    priority: 'urgent',
+    status: 'in_progress',
+    googleSheetRowIndex: 6,
+    googleSheetTab: 'Role-Based Contact Tasks',
+    createdAt: '2026-11-09T12:00:00Z'
+  }
+];

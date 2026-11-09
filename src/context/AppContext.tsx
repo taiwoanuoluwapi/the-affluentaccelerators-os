@@ -15,7 +15,12 @@ import {
   AuditLogEntry,
   SyncLog,
   GoogleIntegrationSettings,
-  PipelineStageId
+  PipelineStageId,
+  OnboardingSubmission,
+  UserInvitation,
+  ContactRoleTask,
+  SupabaseConfig,
+  ApprovalStatus
 } from '../types';
 import {
   INITIAL_USERS,
@@ -32,7 +37,11 @@ import {
   INITIAL_NOTIFICATIONS,
   INITIAL_AUDIT_LOGS,
   INITIAL_SYNC_LOGS,
-  INITIAL_GOOGLE_SETTINGS
+  INITIAL_GOOGLE_SETTINGS,
+  INITIAL_ONBOARDING_SUBMISSIONS,
+  INITIAL_USER_INVITATIONS,
+  INITIAL_CONTACT_ROLE_TASKS,
+  INITIAL_SUPABASE_CONFIG
 } from '../data/initialData';
 import { isOverdue, isDueToday } from '../utils/formatters';
 
