@@ -20,6 +20,15 @@ export interface User {
   createdAt: string;
 }
 
+export interface AuthorizedUser {
+  id: string;
+  email: string;
+  defaultRole: UserRole;
+  invitedBy: string;
+  invitedAt: string;
+  status: 'active' | 'invited';
+}
+
 export type InquiryCategory =
   | 'Business Audit Requests'
   | 'Custom Business Consulting'
