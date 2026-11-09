@@ -218,8 +218,8 @@ export const ExecutiveDashboard: React.FC<DashboardProps> = ({
             </div>
           </div>
           <div className="mt-2 flex items-baseline justify-between">
-            <span className="text-2xl font-extrabold text-slate-800">{kpis.totalInquiries}</span>
-            <span className="text-[11px] font-semibold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">
+            <span className="text-lg sm:text-xl lg:text-2xl font-extrabold text-slate-800 font-mono truncate">{kpis.totalInquiries}</span>
+            <span className="text-[10px] sm:text-[11px] font-semibold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded shrink-0">
               +{kpis.newInquiriesThisMonth} this mo
             </span>
           </div>
