@@ -12,10 +12,18 @@ import {
   RotateCcw,
   Sparkles,
   Lock,
-  Globe
+  Globe,
+  UserCheck,
+  UserPlus,
+  Trash2,
+  BookOpen,
+  Mail,
+  ToggleLeft,
+  ToggleRight
 } from 'lucide-react';
-import { formatDateTime } from '../../utils/formatters';
+import { formatDateTime, formatDate } from '../../utils/formatters';
 import { UserRole } from '../../types';
+import { ProductionGuideView } from './ProductionGuideView';
 
 export const SettingsView: React.FC = () => {
   const {
@@ -23,15 +31,33 @@ export const SettingsView: React.FC = () => {
     auditLogs,
     googleSettings,
     currentUser,
-    resetToInitialData
+    resetToInitialData,
+    authorizedUsers,
+    addAuthorizedUser,
+    removeAuthorizedUser,
+    toggleUserActive
   } = useApp();
 
-  const [activeTab, setActiveTab] = useState<'branding' | 'roles' | 'audit'>('branding');
+  const [activeTab, setActiveTab] = useState<'guide' | 'whitelist' | 'branding' | 'roles' | 'audit'>('guide');
   const [auditFilter, setAuditFilter] = useState('all');
+
+  // New whitelist state
+  const [newStaffEmail, setNewStaffEmail] = useState('');
+  const [newStaffRole, setNewStaffRole] = useState<UserRole>('sales_rep');
 
   const filteredLogs = auditLogs.filter(
     l => auditFilter === 'all' || l.entityType === auditFilter
   );
+
+  const handleAddWhitelist = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newStaffEmail || !newStaffEmail.includes('@')) {
+      alert('Please enter a valid email address.');
+      return;
+    }
+    addAuthorizedUser(newStaffEmail, newStaffRole);
+    setNewStaffEmail('');
+  };
 
   const permissionsMatrix: { role: UserRole; label: string; desc: string; inquiries: string; crm: string; pipeline: string; consulting: string; settings: string }[] = [
     {
@@ -108,7 +134,7 @@ export const SettingsView: React.FC = () => {
             </span>
           </div>
           <p className="text-xs text-slate-400 mt-0.5">
-            Branding, role permissions matrix, team management, and immutable audit logs
+            Production guide, staff whitelist authorization, database security, and audit logs
           </p>
         </div>
 
@@ -118,7 +144,7 @@ export const SettingsView: React.FC = () => {
               resetToInitialData();
             }
           }}
-          className="flex items-center space-x-1.5 px-3.5 py-2 bg-slate-100 hover:bg-rose-50 text-slate-700 hover:text-rose-700 rounded-xl text-xs font-semibold border border-slate-200 transition-colors"
+          className="flex items-center space-x-1.5 px-3.5 py-2 bg-slate-100 hover:bg-rose-50 text-slate-700 hover:text-rose-700 rounded-xl text-xs font-semibold border border-slate-200 transition-colors self-start sm:self-auto"
         >
           <RotateCcw size={14} />
           <span>Reset Demo Data</span>
@@ -126,35 +152,218 @@ export const SettingsView: React.FC = () => {
       </div>
 
       {/* Tabs */}
-      <div className="flex space-x-2 text-xs font-semibold">
+      <div className="flex flex-wrap gap-2 text-xs font-semibold">
+        <button
+          onClick={() => setActiveTab('guide')}
+          className={`px-4 py-2 rounded-xl transition-colors flex items-center space-x-1.5 ${
+            activeTab === 'guide'
+              ? 'bg-emerald-700 text-white shadow-xs'
+              : 'bg-white text-slate-600 hover:bg-slate-100'
+          }`}
+        >
+          <BookOpen size={14} />
+          <span>Production Requirements Guide</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('whitelist')}
+          className={`px-4 py-2 rounded-xl transition-colors flex items-center space-x-1.5 ${
+            activeTab === 'whitelist'
+              ? 'bg-emerald-700 text-white shadow-xs'
+              : 'bg-white text-slate-600 hover:bg-slate-100'
+          }`}
+        >
+          <UserCheck size={14} />
+          <span>Staff Whitelist & Accounts ({authorizedUsers.length})</span>
+        </button>
+
         <button
           onClick={() => setActiveTab('branding')}
           className={`px-4 py-2 rounded-xl transition-colors ${
-            activeTab === 'branding' ? 'bg-emerald-700 text-white shadow-xs' : 'bg-white text-slate-600 hover:bg-slate-100'
+            activeTab === 'branding'
+              ? 'bg-emerald-700 text-white shadow-xs'
+              : 'bg-white text-slate-600 hover:bg-slate-100'
           }`}
         >
-          Company Identity & Branding
+          Company Branding & Tokens
         </button>
+
         <button
           onClick={() => setActiveTab('roles')}
           className={`px-4 py-2 rounded-xl transition-colors ${
-            activeTab === 'roles' ? 'bg-emerald-700 text-white shadow-xs' : 'bg-white text-slate-600 hover:bg-slate-100'
+            activeTab === 'roles'
+              ? 'bg-emerald-700 text-white shadow-xs'
+              : 'bg-white text-slate-600 hover:bg-slate-100'
           }`}
         >
-          User Roles & RBAC Matrix
+          Roles & RBAC Matrix
         </button>
+
         <button
           onClick={() => setActiveTab('audit')}
           className={`px-4 py-2 rounded-xl transition-colors flex items-center space-x-1.5 ${
-            activeTab === 'audit' ? 'bg-emerald-700 text-white shadow-xs' : 'bg-white text-slate-600 hover:bg-slate-100'
+            activeTab === 'audit'
+              ? 'bg-emerald-700 text-white shadow-xs'
+              : 'bg-white text-slate-600 hover:bg-slate-100'
           }`}
         >
           <History size={14} />
-          <span>System Audit Trail</span>
+          <span>Audit Trail</span>
         </button>
       </div>
 
-      {/* TAB 1: BRANDING */}
+      {/* TAB 1: PRODUCTION DEPLOYMENT GUIDE */}
+      {activeTab === 'guide' && <ProductionGuideView />}
+
+      {/* TAB 2: STAFF WHITELIST & INVITATIONS */}
+      {activeTab === 'whitelist' && (
+        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-6 text-xs text-slate-700">
+          <div className="border-b border-slate-100 pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <h3 className="font-bold text-sm text-slate-900">Authorized Staff Whitelist (List-Based Auth)</h3>
+              <p className="text-slate-400 mt-0.5">
+                Only users whose emails appear in this authorized list or match <code className="font-mono text-emerald-800">@affluentaccelerators.com</code> can log in or register.
+              </p>
+            </div>
+            <span className="text-[11px] font-mono text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded border border-emerald-200 font-semibold self-start sm:self-auto">
+              {authorizedUsers.length} Whitelisted Staff
+            </span>
+          </div>
+
+          {/* Add Staff to Whitelist Form */}
+          <form onSubmit={handleAddWhitelist} className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
+            <h4 className="font-bold text-xs text-slate-800 flex items-center space-x-1.5">
+              <UserPlus size={14} className="text-emerald-700" />
+              <span>Authorize New Staff Member / Employee</span>
+            </h4>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="sm:col-span-2">
+                <label className="font-semibold text-slate-600 block mb-1">Corporate Email Address *</label>
+                <input
+                  type="email"
+                  required
+                  value={newStaffEmail}
+                  onChange={e => setNewStaffEmail(e.target.value)}
+                  placeholder="e.g. j.smith@affluentaccelerators.com"
+                  className="w-full p-2 bg-white border border-slate-200 rounded-lg text-xs"
+                />
+              </div>
+
+              <div>
+                <label className="font-semibold text-slate-600 block mb-1">Assigned Default Role</label>
+                <select
+                  value={newStaffRole}
+                  onChange={e => setNewStaffRole(e.target.value as UserRole)}
+                  className="w-full p-2 bg-white border border-slate-200 rounded-lg text-xs"
+                >
+                  <option value="sales_rep">Sales Representative</option>
+                  <option value="bd_manager">BD Manager</option>
+                  <option value="consultant">Consultant / Analyst</option>
+                  <option value="intern">Fellow / Intern</option>
+                  <option value="admin">Operations Admin</option>
+                  <option value="super_admin">Super Admin / Founder</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="flex justify-end">
+              <button
+                type="submit"
+                className="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg font-bold shadow-xs text-xs"
+              >
+                + Add to Authorized Staff List
+              </button>
+            </div>
+          </form>
+
+          {/* Whitelist Table */}
+          <div className="border border-slate-200 rounded-xl overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-slate-100 font-bold text-slate-700 border-b border-slate-200 text-[11px]">
+                  <tr>
+                    <th className="p-3">Staff Email</th>
+                    <th className="p-3">Role Assigned</th>
+                    <th className="p-3">Invited By</th>
+                    <th className="p-3">Invitation Date</th>
+                    <th className="p-3">Access Status</th>
+                    <th className="p-3 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {authorizedUsers.map(auth => (
+                    <tr key={auth.id} className="hover:bg-slate-50">
+                      <td className="p-3 font-semibold text-slate-900 font-mono text-[11px]">{auth.email}</td>
+                      <td className="p-3">
+                        <span className="text-[10px] font-bold bg-slate-100 text-slate-700 px-2 py-0.5 rounded capitalize">
+                          {auth.defaultRole.replace('_', ' ')}
+                        </span>
+                      </td>
+                      <td className="p-3 text-slate-500">{auth.invitedBy}</td>
+                      <td className="p-3 text-slate-400 font-mono text-[11px]">{formatDate(auth.invitedAt)}</td>
+                      <td className="p-3">
+                        <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                          Authorized
+                        </span>
+                      </td>
+                      <td className="p-3 text-right">
+                        <button
+                          onClick={() => removeAuthorizedUser(auth.id)}
+                          className="p-1 text-slate-400 hover:text-rose-600 rounded transition-colors"
+                          title="Revoke Authorization"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* User Account Activation / Deactivation */}
+          <div className="pt-4 border-t border-slate-200 space-y-3">
+            <h4 className="font-bold text-xs text-slate-800">Live Team Accounts & Security Status</h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {users.map(u => (
+                <div
+                  key={u.id}
+                  className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between"
+                >
+                  <div className="flex items-center space-x-2.5">
+                    <img src={u.avatar} alt="" className="w-8 h-8 rounded-full object-cover" />
+                    <div>
+                      <span className="font-bold text-slate-900 block text-xs">{u.name}</span>
+                      <span className="text-[10px] text-slate-400 font-mono">{u.email}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <span
+                      className={`text-[10px] font-bold px-2 py-0.5 rounded ${
+                        u.active
+                          ? 'bg-emerald-100 text-emerald-800'
+                          : 'bg-rose-100 text-rose-800'
+                      }`}
+                    >
+                      {u.active ? 'ACTIVE' : 'DEACTIVATED'}
+                    </span>
+                    <button
+                      onClick={() => toggleUserActive(u.id)}
+                      className="text-xs font-semibold text-slate-600 hover:text-emerald-700 underline"
+                    >
+                      {u.active ? 'Deactivate' : 'Activate'}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TAB 3: BRANDING */}
       {activeTab === 'branding' && (
         <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-6 text-xs text-slate-700">
           <div className="border-b border-slate-100 pb-4">
@@ -227,7 +436,7 @@ export const SettingsView: React.FC = () => {
         </div>
       )}
 
-      {/* TAB 2: ROLES & RBAC MATRIX */}
+      {/* TAB 4: ROLES & RBAC MATRIX */}
       {activeTab === 'roles' && (
         <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4 text-xs text-slate-700">
           <div className="border-b border-slate-100 pb-3">
@@ -238,38 +447,40 @@ export const SettingsView: React.FC = () => {
           </div>
 
           <div className="border border-slate-200 rounded-xl overflow-hidden">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-slate-100 font-bold text-slate-700 border-b border-slate-200 text-[11px]">
-                <tr>
-                  <th className="p-3">User Role</th>
-                  <th className="p-3">Inquiries</th>
-                  <th className="p-3">CRM / Contacts</th>
-                  <th className="p-3">Sales Deals</th>
-                  <th className="p-3">Projects</th>
-                  <th className="p-3">Settings</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {permissionsMatrix.map(m => (
-                  <tr key={m.role} className="hover:bg-slate-50">
-                    <td className="p-3">
-                      <span className="font-bold text-slate-900 block">{m.label}</span>
-                      <span className="text-[10px] text-slate-400">{m.desc}</span>
-                    </td>
-                    <td className="p-3 font-medium text-emerald-800">{m.inquiries}</td>
-                    <td className="p-3 font-medium text-slate-700">{m.crm}</td>
-                    <td className="p-3 font-medium text-purple-800">{m.pipeline}</td>
-                    <td className="p-3 font-medium text-blue-800">{m.consulting}</td>
-                    <td className="p-3 font-medium text-slate-600">{m.settings}</td>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-slate-100 font-bold text-slate-700 border-b border-slate-200 text-[11px]">
+                  <tr>
+                    <th className="p-3">User Role</th>
+                    <th className="p-3">Inquiries</th>
+                    <th className="p-3">CRM / Contacts</th>
+                    <th className="p-3">Sales Deals</th>
+                    <th className="p-3">Projects</th>
+                    <th className="p-3">Settings</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {permissionsMatrix.map(m => (
+                    <tr key={m.role} className="hover:bg-slate-50">
+                      <td className="p-3">
+                        <span className="font-bold text-slate-900 block">{m.label}</span>
+                        <span className="text-[10px] text-slate-400">{m.desc}</span>
+                      </td>
+                      <td className="p-3 font-medium text-emerald-800">{m.inquiries}</td>
+                      <td className="p-3 font-medium text-slate-700">{m.crm}</td>
+                      <td className="p-3 font-medium text-purple-800">{m.pipeline}</td>
+                      <td className="p-3 font-medium text-blue-800">{m.consulting}</td>
+                      <td className="p-3 font-medium text-slate-600">{m.settings}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}
 
-      {/* TAB 3: AUDIT TRAIL */}
+      {/* TAB 5: AUDIT TRAIL */}
       {activeTab === 'audit' && (
         <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4 text-xs">
           <div className="flex items-center justify-between border-b border-slate-100 pb-3">
@@ -289,6 +500,7 @@ export const SettingsView: React.FC = () => {
               <option value="Project">Project Actions</option>
               <option value="Contact">Contact Actions</option>
               <option value="GoogleSync">Google Synchronisation</option>
+              <option value="User">User & Auth Actions</option>
             </select>
           </div>
 
