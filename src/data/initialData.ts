@@ -1,5 +1,6 @@
 import {
   User,
+  AuthorizedUser,
   Inquiry,
   Contact,
   Organisation,
@@ -106,6 +107,73 @@ export const INITIAL_USERS: User[] = [
     active: true,
     lastLogin: '2026-11-09T13:00:00Z',
     createdAt: '2025-09-01T09:00:00Z'
+  }
+];
+
+export const INITIAL_AUTHORIZED_USERS: AuthorizedUser[] = [
+  {
+    id: 'auth_1',
+    email: 'c.eze@affluentaccelerators.com',
+    defaultRole: 'super_admin',
+    invitedBy: 'System Genesis',
+    invitedAt: '2025-01-01T08:00:00Z',
+    status: 'active'
+  },
+  {
+    id: 'auth_2',
+    email: 'a.bello@affluentaccelerators.com',
+    defaultRole: 'admin',
+    invitedBy: 'Dr. Chukwuma Eze',
+    invitedAt: '2025-01-15T09:00:00Z',
+    status: 'active'
+  },
+  {
+    id: 'auth_3',
+    email: 't.adeyemi@affluentaccelerators.com',
+    defaultRole: 'bd_manager',
+    invitedBy: 'Amina Bello',
+    invitedAt: '2025-02-01T09:00:00Z',
+    status: 'active'
+  },
+  {
+    id: 'auth_4',
+    email: 'c.okafor@affluentaccelerators.com',
+    defaultRole: 'sales_rep',
+    invitedBy: 'Tunde Adeyemi',
+    invitedAt: '2025-03-10T09:00:00Z',
+    status: 'active'
+  },
+  {
+    id: 'auth_5',
+    email: 'd.adeleke@affluentaccelerators.com',
+    defaultRole: 'consultant',
+    invitedBy: 'Dr. Chukwuma Eze',
+    invitedAt: '2025-01-20T09:00:00Z',
+    status: 'active'
+  },
+  {
+    id: 'auth_6',
+    email: 'n.nwosu@affluentaccelerators.com',
+    defaultRole: 'consultant',
+    invitedBy: 'Amina Bello',
+    invitedAt: '2025-04-01T09:00:00Z',
+    status: 'active'
+  },
+  {
+    id: 'auth_7',
+    email: 'f.alabi@affluentaccelerators.com',
+    defaultRole: 'intern',
+    invitedBy: 'Amina Bello',
+    invitedAt: '2025-09-01T09:00:00Z',
+    status: 'active'
+  },
+  {
+    id: 'auth_8',
+    email: 'executive.associate@affluentaccelerators.com',
+    defaultRole: 'sales_rep',
+    invitedBy: 'Dr. Chukwuma Eze',
+    invitedAt: '2026-11-01T10:00:00Z',
+    status: 'invited'
   }
 ];
 
