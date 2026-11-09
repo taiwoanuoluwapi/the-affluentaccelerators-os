@@ -209,6 +209,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return saved ? JSON.parse(saved) : INITIAL_GOOGLE_SETTINGS;
   });
 
+  const [authorizedUsers, setAuthorizedUsers] = useState<AuthorizedUser[]>(() => {
+    const saved = localStorage.getItem(`${STORAGE_KEY}_authorized_users`);
+    return saved ? JSON.parse(saved) : INITIAL_AUTHORIZED_USERS;
+  });
+
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+    const saved = localStorage.getItem(`${STORAGE_KEY}_is_authenticated`);
+    return saved !== null ? JSON.parse(saved) : true;
+  });
+
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [globalSearchQuery, setGlobalSearchQuery] = useState('');
 
   // Persist to localStorage
@@ -216,6 +227,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       localStorage.setItem(`${STORAGE_KEY}_users`, JSON.stringify(users));
       localStorage.setItem(`${STORAGE_KEY}_current_user`, currentUserId);
+      localStorage.setItem(`${STORAGE_KEY}_authorized_users`, JSON.stringify(authorizedUsers));
+      localStorage.setItem(`${STORAGE_KEY}_is_authenticated`, JSON.stringify(isAuthenticated));
       localStorage.setItem(`${STORAGE_KEY}_inquiries`, JSON.stringify(inquiries));
       localStorage.setItem(`${STORAGE_KEY}_contacts`, JSON.stringify(contacts));
       localStorage.setItem(`${STORAGE_KEY}_organisations`, JSON.stringify(organisations));
@@ -254,8 +267,169 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const found = users.find(u => u.id === userId);
     if (found) {
       setCurrentUserId(userId);
+      setIsAuthenticated(true);
       addAuditLog('User Switched Session', 'User', userId, `Active role switched to ${found.name} (${found.role})`);
     }
+  };
+
+  const login = (email: string, password?: string): { success: boolean; message?: string } => {
+    const cleanEmail = email.trim().toLowerCase();
+    const user = users.find(u => u.email.toLowerCase() === cleanEmail);
+
+    if (!user) {
+      // Check if email is in authorized whitelist
+      const isAuthorized = authorizedUsers.some(a => a.email.toLowerCase() === cleanEmail);
+      if (isAuthorized) {
+        // Create user from whitelist
+        const authRecord = authorizedUsers.find(a => a.email.toLowerCase() === cleanEmail)!;
+        const newUser: User = {
+          id: `usr_${Date.now()}`,
+          name: cleanEmail.split('@')[0].replace('.', ' '),
+          email: cleanEmail,
+          role: authRecord.defaultRole,
+          title: 'Authorized Staff',
+          department: 'Operations',
+          avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+          phone: '+234 800 000 0000',
+          active: true,
+          lastLogin: new Date().toISOString(),
+          createdAt: new Date().toISOString()
+        };
+        setUsers(prev => [...prev, newUser]);
+        setCurrentUserId(newUser.id);
+        setIsAuthenticated(true);
+        return { success: true };
+      }
+      return {
+        success: false,
+        message: 'Account not found. Please contact your AffluentOS administrator or sign up with an authorized company email.'
+      };
+    }
+
+    if (!user.active) {
+      return {
+        success: false,
+        message: 'This account has been deactivated by the system administrator.'
+      };
+    }
+
+    setCurrentUserId(user.id);
+    setIsAuthenticated(true);
+    updateUserProfile(user.id, { lastLogin: new Date().toISOString() });
+    addAuditLog('User Login', 'User', user.id, `${user.name} signed in successfully`);
+    return { success: true };
+  };
+
+  const signup = (params: {
+    name: string;
+    email: string;
+    phone?: string;
+    department?: string;
+    password?: string;
+  }): { success: boolean; message: string; requiresApproval?: boolean } => {
+    const cleanEmail = params.email.trim().toLowerCase();
+
+    // Check if user already exists
+    if (users.some(u => u.email.toLowerCase() === cleanEmail)) {
+      return { success: false, message: 'An account with this email address already exists.' };
+    }
+
+    // Check whitelist or @affluentaccelerators.com domain
+    const isAffluentDomain = cleanEmail.endsWith('@affluentaccelerators.com');
+    const authWhitelist = authorizedUsers.find(a => a.email.toLowerCase() === cleanEmail);
+
+    if (!isAffluentDomain && !authWhitelist) {
+      // Create user but mark as inactive awaiting admin approval
+      const pendingUser: User = {
+        id: `usr_${Date.now()}`,
+        name: params.name,
+        email: cleanEmail,
+        role: 'intern',
+        title: 'Pending Verification',
+        department: params.department || 'Operations',
+        avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150',
+        phone: params.phone || '+234 800 000 0000',
+        active: false,
+        lastLogin: new Date().toISOString(),
+        createdAt: new Date().toISOString()
+      };
+      setUsers(prev => [...prev, pendingUser]);
+      addAuditLog(
+        'User Signup Pending',
+        'User',
+        pendingUser.id,
+        `${params.name} (${cleanEmail}) signed up from non-whitelisted email. Awaiting admin approval.`
+      );
+      return {
+        success: true,
+        requiresApproval: true,
+        message: 'Your registration was submitted. An administrator must verify and activate your corporate account before access is granted.'
+      };
+    }
+
+    // Whitelisted or company domain: automatically activate with appropriate role
+    const assignedRole: UserRole = authWhitelist?.defaultRole || (cleanEmail.includes('founder') || cleanEmail.includes('eze') ? 'super_admin' : 'sales_rep');
+    const newUser: User = {
+      id: `usr_${Date.now()}`,
+      name: params.name,
+      email: cleanEmail,
+      role: assignedRole,
+      title: authWhitelist ? 'Team Member' : 'Commercial Associate',
+      department: params.department || 'Commercial Growth',
+      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+      phone: params.phone || '+234 800 000 0000',
+      active: true,
+      lastLogin: new Date().toISOString(),
+      createdAt: new Date().toISOString()
+    };
+
+    setUsers(prev => [...prev, newUser]);
+    setCurrentUserId(newUser.id);
+    setIsAuthenticated(true);
+
+    addAuditLog('User Registered', 'User', newUser.id, `${newUser.name} created account with role ${newUser.role}`);
+    return { success: true, message: 'Account created successfully! Welcome to AffluentOS.' };
+  };
+
+  const logout = () => {
+    setIsAuthenticated(false);
+    addAuditLog('User Logout', 'User', currentUser.id, `${currentUser.name} signed out`);
+  };
+
+  const updateUserProfile = (userId: string, updates: Partial<User>) => {
+    setUsers(prev =>
+      prev.map(u => (u.id === userId ? { ...u, ...updates } : u))
+    );
+    addAuditLog('User Profile Updated', 'User', userId, `Updated user profile`);
+  };
+
+  const toggleUserActive = (userId: string) => {
+    setUsers(prev =>
+      prev.map(u => (u.id === userId ? { ...u, active: !u.active } : u))
+    );
+    const target = users.find(u => u.id === userId);
+    addAuditLog('User Status Toggled', 'User', userId, `Toggled active state for ${target?.name}`);
+  };
+
+  const addAuthorizedUser = (email: string, defaultRole: UserRole) => {
+    const cleanEmail = email.trim().toLowerCase();
+    if (authorizedUsers.some(a => a.email.toLowerCase() === cleanEmail)) return;
+
+    const newAuth: AuthorizedUser = {
+      id: `auth_${Date.now()}`,
+      email: cleanEmail,
+      defaultRole,
+      invitedBy: currentUser.name,
+      invitedAt: new Date().toISOString(),
+      status: 'invited'
+    };
+    setAuthorizedUsers(prev => [...prev, newAuth]);
+    addAuditLog('Staff Whitelisted', 'User', newAuth.id, `Invited ${cleanEmail} with default role ${defaultRole}`);
+  };
+
+  const removeAuthorizedUser = (id: string) => {
+    setAuthorizedUsers(prev => prev.filter(a => a.id !== id));
+    addAuditLog('Staff Removed from Whitelist', 'User', id, `Removed user authorization`);
   };
 
   const addAuditLog = (
@@ -880,6 +1054,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         currentUser,
         switchUser,
         users,
+        updateUserProfile,
+        toggleUserActive,
+        isAuthenticated,
+        login,
+        signup,
+        logout,
+        authorizedUsers,
+        addAuthorizedUser,
+        removeAuthorizedUser,
+        mobileSidebarOpen,
+        setMobileSidebarOpen,
         inquiries,
         addInquiry,
         updateInquiry,
