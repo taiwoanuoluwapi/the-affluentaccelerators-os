@@ -111,6 +111,34 @@ interface AppContextType {
   triggerGoogleSync: () => Promise<{ success: boolean; count: number }>;
   importHistoricalInquiries: () => Promise<number>;
 
+  // User Onboarding & Email Invitations
+  onboardingSubmissions: OnboardingSubmission[];
+  userInvitations: UserInvitation[];
+  inviteUserByEmail: (email: string, role: UserRole, department: string, customNotes?: string) => UserInvitation;
+  submitOnboardingForm: (formData: {
+    inviteToken?: string;
+    fullName: string;
+    email: string;
+    phone: string;
+    requestedRole: UserRole;
+    department: string;
+    bio: string;
+    linkedinUrl?: string;
+    password?: string;
+  }) => Promise<OnboardingSubmission>;
+  toggleOnboardingApproval: (submissionId: string, newStatus: ApprovalStatus, notes?: string) => Promise<void>;
+  simulateSheetApprovalWebhook: (rowIndex: number, status: 'approved' | 'unapproved') => Promise<void>;
+  triggerSheetsOnboardingSync: () => Promise<{ success: boolean; message: string }>;
+
+  // Role-Based Tasks on Contacts
+  contactRoleTasks: ContactRoleTask[];
+  addContactRoleTask: (task: Omit<ContactRoleTask, 'id' | 'createdAt' | 'googleSheetRowIndex' | 'googleSheetTab'>) => ContactRoleTask;
+  updateContactRoleTaskStatus: (taskId: string, status: 'todo' | 'in_progress' | 'completed') => void;
+
+  // Supabase Configuration
+  supabaseConfig: SupabaseConfig;
+  updateSupabaseConfig: (config: Partial<SupabaseConfig>) => void;
+
   // Notifications & Audit
   notifications: Notification[];
   markNotificationAsRead: (id: string) => void;
@@ -141,6 +169,7 @@ interface AppContextType {
     pipelineTotalValue: number;
     weightedPipelineValue: number;
     winRate: number;
+    unapprovedOnboardingCount: number;
   };
 }
 
