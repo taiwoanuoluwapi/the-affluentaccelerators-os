@@ -395,10 +395,84 @@ export interface GoogleIntegrationSettings {
   spreadsheetId: string;
   spreadsheetName: string;
   sheetName: string;
+  onboardingSheetName: string;
+  tasksSheetName: string;
   driveFolderId: string;
   driveFolderName: string;
   lastSyncedAt: string;
   autoSync: boolean;
   syncFrequencyMinutes: number;
   columnMapping: Record<string, string>;
+}
+
+export type ApprovalStatus = 'unapproved' | 'approved' | 'rejected';
+
+export interface OnboardingSubmission {
+  id: string;
+  inviteToken?: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  requestedRole: UserRole;
+  department: string;
+  bio: string;
+  linkedinUrl?: string;
+  approvalStatus: ApprovalStatus;
+  approvalNotes?: string;
+  invitedBy?: string;
+  invitedAt?: string;
+  submittedAt: string;
+  approvedAt?: string;
+  approvedBy?: string;
+  googleSheetRowIndex: number;
+  googleSheetTab: string;
+  syncedToSupabase: boolean;
+  syncedToGoogleSheet: boolean;
+}
+
+export interface UserInvitation {
+  id: string;
+  email: string;
+  role: UserRole;
+  department: string;
+  token: string;
+  inviteUrl: string;
+  invitedBy: string;
+  invitedAt: string;
+  expiresAt: string;
+  status: 'pending' | 'submitted' | 'expired';
+  customNotes?: string;
+}
+
+export interface ContactRoleTask {
+  id: string;
+  contactId: string;
+  contactName: string;
+  businessName: string;
+  title: string;
+  description: string;
+  assignedRole: UserRole;
+  assignedUserId?: string;
+  assignedUserName?: string;
+  dueDate: string;
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  status: 'todo' | 'in_progress' | 'completed';
+  googleSheetRowIndex?: number;
+  googleSheetTab?: string;
+  completedAt?: string;
+  createdAt: string;
+}
+
+export interface SupabaseConfig {
+  connected: boolean;
+  projectUrl: string;
+  anonKey: string;
+  authMethod: 'email_password' | 'magic_link' | 'google_oauth';
+  rlsEnforced: boolean;
+  tables: {
+    users: string;
+    contacts: string;
+    onboarding: string;
+    tasks: string;
+  };
 }
