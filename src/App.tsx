@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from './context/AppContext';
 import { Sidebar } from './components/layout/Sidebar';
 import { TopNav } from './components/layout/TopNav';
@@ -27,6 +27,9 @@ import { GoogleIntegrationModal } from './components/google/GoogleIntegrationMod
 import { GlobalSearchResults } from './components/common/GlobalSearchResults';
 import { AuthView } from './components/auth/AuthView';
 import { UserProfileModal } from './components/auth/UserProfileModal';
+import { UserOnboardingView } from './components/onboarding/UserOnboardingView';
+import { PublicOnboardingFormModal } from './components/onboarding/PublicOnboardingFormModal';
+import { UserRole } from './types';
 
 export const App: React.FC = () => {
   const { inquiries, deals, isAuthenticated } = useApp();
