@@ -13,7 +13,8 @@ import {
   TrendingUp,
   FileText,
   Filter,
-  DollarSign
+  DollarSign,
+  X
 } from 'lucide-react';
 import { formatDate, formatDateTime, formatRelativeTime, isOverdue, isDueToday, formatCurrency } from '../../utils/formatters';
 import { ActivityType, FollowUpItem } from '../../types';

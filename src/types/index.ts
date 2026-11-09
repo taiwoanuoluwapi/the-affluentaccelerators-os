@@ -214,6 +214,7 @@ export type ActivityType =
   | 'whatsapp'
   | 'email'
   | 'discovery_meeting'
+  | 'meeting'
   | 'follow_up'
   | 'client_visit'
   | 'networking_event'

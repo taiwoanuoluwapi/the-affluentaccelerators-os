@@ -239,7 +239,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <div className="flex items-center space-x-1">
                 <span className="font-semibold text-sm text-white truncate">{currentUser.name}</span>
                 {currentUser.role === 'super_admin' && (
-                  <ShieldCheck size={14} className="text-amber-400 shrink-0" title="Super Admin / Founder" />
+                  <span title="Super Admin / Founder">
+                    <ShieldCheck size={14} className="text-amber-400 shrink-0" />
+                  </span>
                 )}
               </div>
               <p className="text-[11px] text-emerald-200/80 truncate">{currentUser.title}</p>
