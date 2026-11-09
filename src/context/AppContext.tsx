@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import {
   User,
   UserRole,
+  AuthorizedUser,
   Inquiry,
   Contact,
   Organisation,
@@ -18,6 +19,7 @@ import {
 } from '../types';
 import {
   INITIAL_USERS,
+  INITIAL_AUTHORIZED_USERS,
   INITIAL_PIPELINE_STAGES,
   INITIAL_INQUIRIES,
   INITIAL_CONTACTS,
@@ -38,6 +40,21 @@ interface AppContextType {
   currentUser: User;
   switchUser: (userId: string) => void;
   users: User[];
+  updateUserProfile: (userId: string, updates: Partial<User>) => void;
+  toggleUserActive: (userId: string) => void;
+
+  // Authentication
+  isAuthenticated: boolean;
+  login: (email: string, password?: string) => { success: boolean; message?: string };
+  signup: (params: { name: string; email: string; phone?: string; department?: string; password?: string }) => { success: boolean; message: string; requiresApproval?: boolean };
+  logout: () => void;
+  authorizedUsers: AuthorizedUser[];
+  addAuthorizedUser: (email: string, defaultRole: UserRole) => void;
+  removeAuthorizedUser: (id: string) => void;
+
+  // Mobile layout state
+  mobileSidebarOpen: boolean;
+  setMobileSidebarOpen: (open: boolean) => void;
   
   // Inquiries
   inquiries: Inquiry[];
