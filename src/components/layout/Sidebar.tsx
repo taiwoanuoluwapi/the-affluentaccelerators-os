@@ -15,7 +15,8 @@ import {
   ChevronRight,
   ShieldCheck,
   FileSpreadsheet,
-  X
+  X,
+  UserPlus
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { UserRole } from '../../types';
@@ -39,12 +40,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
     followUps,
     notifications,
     mobileSidebarOpen,
-    setMobileSidebarOpen
+    setMobileSidebarOpen,
+    onboardingSubmissions
   } = useApp();
 
   const newInquiriesCount = inquiries.filter(i => i.status === 'new').length;
   const overdueFollowUpsCount = followUps.filter(f => !f.completed && new Date(f.dueDate).getTime() < Date.now()).length;
   const unreadNotifsCount = notifications.filter(n => !n.read).length;
+  const unapprovedCount = onboardingSubmissions.filter(s => s.approvalStatus === 'unapproved').length;
 
   const navItems = [
     {
@@ -66,6 +69,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
       label: 'CRM / Contacts',
       icon: Users2,
       roles: ['super_admin', 'admin', 'bd_manager', 'sales_rep', 'consultant']
+    },
+    {
+      id: 'onboarding',
+      label: 'User Onboarding & Approvals',
+      icon: UserPlus,
+      badge: unapprovedCount > 0 ? unapprovedCount : undefined,
+      badgeColor: 'bg-amber-500 text-white',
+      roles: ['super_admin', 'admin', 'bd_manager', 'sales_rep', 'consultant', 'intern']
     },
     {
       id: 'pipeline',

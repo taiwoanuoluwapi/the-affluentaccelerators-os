@@ -146,6 +146,17 @@ export const ContactDetailModal: React.FC<ContactDetailModalProps> = ({
             Chronological Timeline
           </button>
           <button
+            onClick={() => setActiveTab('tasks')}
+            className={`py-3 border-b-2 transition-colors flex items-center space-x-1.5 ${
+              activeTab === 'tasks' ? 'border-emerald-700 text-emerald-900 font-bold' : 'border-transparent hover:text-slate-800'
+            }`}
+          >
+            <span>Role Tasks</span>
+            <span className="bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.2 rounded-full text-[10px]">
+              {contactTasks.length}
+            </span>
+          </button>
+          <button
             onClick={() => setActiveTab('deals')}
             className={`py-3 border-b-2 transition-colors flex items-center space-x-1.5 ${
               activeTab === 'deals' ? 'border-emerald-700 text-emerald-900 font-bold' : 'border-transparent hover:text-slate-800'
@@ -204,6 +215,16 @@ export const ContactDetailModal: React.FC<ContactDetailModalProps> = ({
                   </div>
                 ))}
               </div>
+
+              {/* Also show role tasks summary at bottom of timeline */}
+              <ContactTasksSection contact={contact} />
+            </div>
+          )}
+
+          {/* TAB: ROLE TASKS */}
+          {activeTab === 'tasks' && (
+            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+              <ContactTasksSection contact={contact} />
             </div>
           )}
 
