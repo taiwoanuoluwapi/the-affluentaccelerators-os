@@ -64,6 +64,30 @@
       "created_at": "2026-11-09T20:35:04.607Z",
       "sender": "ios",
       "is_cancelled": true
+    },
+    {
+      "id": "f5aa6613-af92-4ad8-88d7-63749911b69e",
+      "role": "user",
+      "content": "so I actually would want all our clients data hostel on the sheets and I just want to use superbase for the auth of users and different role based task to certain contacts on the sheet, I want there to also be an on boarding form and a request to invite new users by their email and it leads to the form and it is posted to the Google sheet too on another section, I get to approve them also back on the sheet changing a Boolean status, \"approved, unapproved\", by the way give me your better Strat",
+      "status": "cancelled",
+      "model": "gemini-3.8-flash-high",
+      "client_type": "gemini-bridge",
+      "parent_message_id": null,
+      "created_at": "2026-11-09T20:35:46.655Z",
+      "sender": "ios",
+      "is_cancelled": true
+    },
+    {
+      "id": "27ccc50f-b81e-40b9-a818-0894767dcca8",
+      "role": "user",
+      "content": "so you're a professional app developer and consultant, built quite a number of internal tools for different organisationss, I actually would want all our clients data hostel on the Google sheets and I just want to use superbase for the auth of users and different role based task to certain contacts on the sheet, I want there to also be an on boarding form and a request to invite new users by their email and it leads to the form and it is posted to the Google sheet too on another section, I get to approve them also back on the sheet changing a Boolean status, \"approved, unapproved\", by the way give me your better Strategy if you thinka it's okay or their more you could help me do",
+      "status": "pending",
+      "model": "gemini-3.8-flash-high",
+      "client_type": "gemini-bridge",
+      "parent_message_id": null,
+      "created_at": "2026-11-09T20:37:10.803Z",
+      "sender": "ios",
+      "is_cancelled": false
     }
   ]
 }
