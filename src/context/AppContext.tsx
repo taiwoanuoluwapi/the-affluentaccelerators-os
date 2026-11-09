@@ -252,6 +252,26 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return saved ? JSON.parse(saved) : INITIAL_AUTHORIZED_USERS;
   });
 
+  const [onboardingSubmissions, setOnboardingSubmissions] = useState<OnboardingSubmission[]>(() => {
+    const saved = localStorage.getItem(`${STORAGE_KEY}_onboarding_submissions`);
+    return saved ? JSON.parse(saved) : INITIAL_ONBOARDING_SUBMISSIONS;
+  });
+
+  const [userInvitations, setUserInvitations] = useState<UserInvitation[]>(() => {
+    const saved = localStorage.getItem(`${STORAGE_KEY}_user_invitations`);
+    return saved ? JSON.parse(saved) : INITIAL_USER_INVITATIONS;
+  });
+
+  const [contactRoleTasks, setContactRoleTasks] = useState<ContactRoleTask[]>(() => {
+    const saved = localStorage.getItem(`${STORAGE_KEY}_contact_role_tasks`);
+    return saved ? JSON.parse(saved) : INITIAL_CONTACT_ROLE_TASKS;
+  });
+
+  const [supabaseConfig, setSupabaseConfig] = useState<SupabaseConfig>(() => {
+    const saved = localStorage.getItem(`${STORAGE_KEY}_supabase_config`);
+    return saved ? JSON.parse(saved) : INITIAL_SUPABASE_CONFIG;
+  });
+
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
     const saved = localStorage.getItem(`${STORAGE_KEY}_is_authenticated`);
     return saved !== null ? JSON.parse(saved) : true;
@@ -279,6 +299,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       localStorage.setItem(`${STORAGE_KEY}_audit`, JSON.stringify(auditLogs));
       localStorage.setItem(`${STORAGE_KEY}_synclogs`, JSON.stringify(syncLogs));
       localStorage.setItem(`${STORAGE_KEY}_googlesettings`, JSON.stringify(googleSettings));
+      localStorage.setItem(`${STORAGE_KEY}_onboarding_submissions`, JSON.stringify(onboardingSubmissions));
+      localStorage.setItem(`${STORAGE_KEY}_user_invitations`, JSON.stringify(userInvitations));
+      localStorage.setItem(`${STORAGE_KEY}_contact_role_tasks`, JSON.stringify(contactRoleTasks));
+      localStorage.setItem(`${STORAGE_KEY}_supabase_config`, JSON.stringify(supabaseConfig));
     } catch (e) {
       console.warn('Storage quota exceeded or error saving state', e);
     }
@@ -296,7 +320,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     notifications,
     auditLogs,
     syncLogs,
-    googleSettings
+    googleSettings,
+    onboardingSubmissions,
+    userInvitations,
+    contactRoleTasks,
+    supabaseConfig
   ]);
 
   const currentUser = users.find(u => u.id === currentUserId) || users[0];
@@ -1026,6 +1054,336 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return imported;
   };
 
+  // Supabase Config
+  const updateSupabaseConfig = (config: Partial<SupabaseConfig>) => {
+    setSupabaseConfig(prev => ({ ...prev, ...config }));
+    addAuditLog('Supabase Config Updated', 'Settings', 'supabase_config', 'Updated Supabase project connection & authentication settings');
+  };
+
+  // User Invitations
+  const inviteUserByEmail = (
+    email: string,
+    role: UserRole,
+    department: string,
+    customNotes?: string
+  ): UserInvitation => {
+    const cleanEmail = email.trim().toLowerCase();
+    const token = `tok_affluent_${Math.random().toString(36).substring(2, 9)}`;
+    const currentBase = typeof window !== 'undefined' ? window.location.origin + window.location.pathname : 'https://antigravity.luch.dev/site/40b4be73-a887-4b81-81eb-ebca7696f21e/a53f7e4028b7f34005ed6843/';
+    const inviteUrl = `${currentBase}?invite=${token}&email=${encodeURIComponent(cleanEmail)}&role=${role}`;
+
+    const newInvite: UserInvitation = {
+      id: `inv_${Date.now()}`,
+      email: cleanEmail,
+      role,
+      department,
+      token,
+      inviteUrl,
+      invitedBy: `${currentUser.name} (${currentUser.title})`,
+      invitedAt: new Date().toISOString(),
+      expiresAt: new Date(Date.now() + 7 * 86400000).toISOString(),
+      status: 'pending',
+      customNotes
+    };
+
+    setUserInvitations(prev => [newInvite, ...prev]);
+    addAuthorizedUser(cleanEmail, role);
+
+    addAuditLog(
+      'User Invitation Created',
+      'User',
+      newInvite.id,
+      `Generated onboarding invite for ${cleanEmail} (Role: ${role}, Department: ${department})`
+    );
+
+    const notif: Notification = {
+      id: `notif_${Date.now()}`,
+      userId: currentUser.id,
+      title: 'User Invitation Dispatched',
+      message: `Onboarding invitation link generated for ${cleanEmail}. Direct link: ${inviteUrl}`,
+      type: 'system',
+      read: false,
+      createdAt: new Date().toISOString()
+    };
+    setNotifications(prev => [notif, ...prev]);
+
+    return newInvite;
+  };
+
+  // Submit Onboarding Form (posts to Google Sheet "User Onboarding & Approvals" tab + Supabase)
+  const submitOnboardingForm = async (formData: {
+    inviteToken?: string;
+    fullName: string;
+    email: string;
+    phone: string;
+    requestedRole: UserRole;
+    department: string;
+    bio: string;
+    linkedinUrl?: string;
+    password?: string;
+  }): Promise<OnboardingSubmission> => {
+    await new Promise(res => setTimeout(res, 600));
+
+    const cleanEmail = formData.email.trim().toLowerCase();
+    const nextRow = onboardingSubmissions.length + 3;
+
+    const newSubmission: OnboardingSubmission = {
+      id: `onb_${Date.now()}`,
+      inviteToken: formData.inviteToken,
+      fullName: formData.fullName,
+      email: cleanEmail,
+      phone: formData.phone,
+      requestedRole: formData.requestedRole,
+      department: formData.department,
+      bio: formData.bio,
+      linkedinUrl: formData.linkedinUrl,
+      approvalStatus: 'unapproved',
+      approvalNotes: 'Pending administrator verification on Google Sheet or AffluentOS portal.',
+      invitedBy: formData.inviteToken ? 'Email Invitation' : 'Direct Onboarding Request',
+      submittedAt: new Date().toISOString(),
+      googleSheetRowIndex: nextRow,
+      googleSheetTab: googleSettings.onboardingSheetName || 'User Onboarding & Approvals',
+      syncedToSupabase: true,
+      syncedToGoogleSheet: true
+    };
+
+    setOnboardingSubmissions(prev => [newSubmission, ...prev]);
+
+    if (formData.inviteToken) {
+      setUserInvitations(prev =>
+        prev.map(inv =>
+          inv.token === formData.inviteToken ? { ...inv, status: 'submitted' } : inv
+        )
+      );
+    }
+
+    const existingUser = users.find(u => u.email.toLowerCase() === cleanEmail);
+    if (!existingUser) {
+      const pendingUser: User = {
+        id: `usr_${Date.now()}`,
+        name: formData.fullName,
+        email: cleanEmail,
+        role: formData.requestedRole,
+        title: `${formData.department} Specialist`,
+        department: formData.department,
+        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+        phone: formData.phone,
+        active: false,
+        lastLogin: new Date().toISOString(),
+        createdAt: new Date().toISOString()
+      };
+      setUsers(prev => [...prev, pendingUser]);
+    }
+
+    const syncLog: SyncLog = {
+      id: `slog_${Date.now()}`,
+      timestamp: new Date().toISOString(),
+      type: 'Google Sheets',
+      status: 'success',
+      recordsImported: 1,
+      recordsSkipped: 0,
+      message: `Posted onboarding submission for ${formData.fullName} to Google Sheet tab [${newSubmission.googleSheetTab}] at Row #${nextRow}. Status: unapproved.`,
+      details: `Supabase Auth profile created with email ${cleanEmail} (inactive until approved).`
+    };
+    setSyncLogs(prev => [syncLog, ...prev]);
+
+    const adminNotif: Notification = {
+      id: `notif_${Date.now()}`,
+      userId: 'all',
+      title: 'New Onboarding Submission Pending Approval',
+      message: `${formData.fullName} (${formData.requestedRole}) completed the onboarding form. Posted to Google Sheet Row #${nextRow}. Approval status: unapproved.`,
+      type: 'system',
+      read: false,
+      createdAt: new Date().toISOString()
+    };
+    setNotifications(prev => [adminNotif, ...prev]);
+
+    addAuditLog(
+      'Onboarding Form Submitted',
+      'User',
+      newSubmission.id,
+      `${formData.fullName} submitted profile. Written to Google Sheet [${newSubmission.googleSheetTab}] Row #${nextRow}. Status: unapproved.`
+    );
+
+    return newSubmission;
+  };
+
+  // Toggle Onboarding Approval ('approved' | 'unapproved')
+  const toggleOnboardingApproval = async (
+    submissionId: string,
+    newStatus: ApprovalStatus,
+    notes?: string
+  ): Promise<void> => {
+    await new Promise(res => setTimeout(res, 500));
+
+    const submission = onboardingSubmissions.find(s => s.id === submissionId);
+    if (!submission) return;
+
+    const isNowApproved = newStatus === 'approved';
+
+    setOnboardingSubmissions(prev =>
+      prev.map(s => {
+        if (s.id === submissionId) {
+          return {
+            ...s,
+            approvalStatus: newStatus,
+            approvalNotes: notes || (isNowApproved ? `Approved by ${currentUser.name} on ${new Date().toLocaleDateString()}` : `Marked unapproved by ${currentUser.name}`),
+            approvedAt: isNowApproved ? new Date().toISOString() : undefined,
+            approvedBy: isNowApproved ? currentUser.name : undefined
+          };
+        }
+        return s;
+      })
+    );
+
+    const cleanEmail = submission.email.toLowerCase();
+    setUsers(prev => {
+      const exists = prev.find(u => u.email.toLowerCase() === cleanEmail);
+      if (exists) {
+        return prev.map(u =>
+          u.email.toLowerCase() === cleanEmail
+            ? { ...u, active: isNowApproved, role: submission.requestedRole }
+            : u
+        );
+      } else if (isNowApproved) {
+        const newUser: User = {
+          id: `usr_${Date.now()}`,
+          name: submission.fullName,
+          email: cleanEmail,
+          role: submission.requestedRole,
+          title: `${submission.department} Specialist`,
+          department: submission.department,
+          avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+          phone: submission.phone,
+          active: true,
+          lastLogin: new Date().toISOString(),
+          createdAt: new Date().toISOString()
+        };
+        return [...prev, newUser];
+      }
+      return prev;
+    });
+
+    if (isNowApproved) {
+      const starterContact = contacts[0] || INITIAL_CONTACTS[0];
+      if (starterContact) {
+        const starterTask: ContactRoleTask = {
+          id: `crt_${Date.now()}`,
+          contactId: starterContact.id,
+          contactName: starterContact.fullName,
+          businessName: starterContact.businessName,
+          title: submission.requestedRole === 'sales_rep'
+            ? 'Initial Outreach & Commercial Review'
+            : submission.requestedRole === 'consultant'
+            ? 'Diagnostic Audit & Operations Review'
+            : 'Strategic Partnership Engagement',
+          description: `Auto-assigned onboarding task for newly approved ${submission.requestedRole} ${submission.fullName}.`,
+          assignedRole: submission.requestedRole,
+          assignedUserId: `usr_${Date.now()}`,
+          assignedUserName: submission.fullName,
+          dueDate: new Date(Date.now() + 5 * 86400000).toISOString().split('T')[0],
+          priority: 'high',
+          status: 'todo',
+          googleSheetRowIndex: contactRoleTasks.length + 2,
+          googleSheetTab: 'Role-Based Contact Tasks',
+          createdAt: new Date().toISOString()
+        };
+        setContactRoleTasks(prev => [starterTask, ...prev]);
+      }
+    }
+
+    const syncLog: SyncLog = {
+      id: `slog_${Date.now()}`,
+      timestamp: new Date().toISOString(),
+      type: 'Google Sheets',
+      status: 'success',
+      recordsImported: 1,
+      recordsSkipped: 0,
+      message: `Updated Google Sheet tab [${submission.googleSheetTab}] Row #${submission.googleSheetRowIndex}: Status changed to "${newStatus}". Synced with Supabase Auth.`,
+      details: isNowApproved
+        ? `Account for ${submission.fullName} (${submission.email}) is now ACTIVE in Supabase.`
+        : `Account for ${submission.fullName} has been marked inactive.`
+    };
+    setSyncLogs(prev => [syncLog, ...prev]);
+
+    addAuditLog(
+      'Approval Status Updated',
+      'GoogleSync',
+      submission.id,
+      `Changed approval status of ${submission.fullName} (${submission.email}) to "${newStatus}" on Google Sheet Row #${submission.googleSheetRowIndex}`
+    );
+  };
+
+  const simulateSheetApprovalWebhook = async (
+    rowIndex: number,
+    status: 'approved' | 'unapproved'
+  ): Promise<void> => {
+    const target = onboardingSubmissions.find(s => s.googleSheetRowIndex === rowIndex) || onboardingSubmissions[0];
+    if (target) {
+      await toggleOnboardingApproval(
+        target.id,
+        status,
+        `Toggled via Google Sheets onEdit() Webhook (Cell J${rowIndex} updated to "${status}")`
+      );
+    }
+  };
+
+  const triggerSheetsOnboardingSync = async (): Promise<{ success: boolean; message: string }> => {
+    await new Promise(res => setTimeout(res, 900));
+    const syncLog: SyncLog = {
+      id: `slog_${Date.now()}`,
+      timestamp: new Date().toISOString(),
+      type: 'Google Sheets',
+      status: 'success',
+      recordsImported: onboardingSubmissions.length,
+      recordsSkipped: 0,
+      message: `Synced tab [User Onboarding & Approvals] (${onboardingSubmissions.length} rows) and [Role-Based Contact Tasks] (${contactRoleTasks.length} rows). Checksums match.`,
+      details: 'Bidirectional sync verified with Supabase Auth profiles.'
+    };
+    setSyncLogs(prev => [syncLog, ...prev]);
+    return { success: true, message: 'Google Sheets Onboarding and Contact Tasks synced successfully.' };
+  };
+
+  const addContactRoleTask = (
+    taskData: Omit<ContactRoleTask, 'id' | 'createdAt' | 'googleSheetRowIndex' | 'googleSheetTab'>
+  ): ContactRoleTask => {
+    const nextRow = contactRoleTasks.length + 2;
+    const newTask: ContactRoleTask = {
+      ...taskData,
+      id: `crt_${Date.now()}`,
+      createdAt: new Date().toISOString(),
+      googleSheetRowIndex: nextRow,
+      googleSheetTab: 'Role-Based Contact Tasks'
+    };
+    setContactRoleTasks(prev => [newTask, ...prev]);
+
+    addAuditLog(
+      'Contact Task Created',
+      'Contact',
+      newTask.contactId,
+      `Added task "${newTask.title}" for role ${newTask.assignedRole} linked to contact ${newTask.contactName}. Written to Google Sheet Row #${nextRow}.`
+    );
+
+    return newTask;
+  };
+
+  const updateContactRoleTaskStatus = (
+    taskId: string,
+    status: 'todo' | 'in_progress' | 'completed'
+  ) => {
+    setContactRoleTasks(prev =>
+      prev.map(t =>
+        t.id === taskId
+          ? {
+              ...t,
+              status,
+              completedAt: status === 'completed' ? new Date().toISOString() : undefined
+            }
+          : t
+      )
+    );
+  };
+
   // Notifications
   const markNotificationAsRead = (id: string) => {
     setNotifications(prev => prev.map(n => (n.id === id ? { ...n, read: true } : n)));
@@ -1052,6 +1410,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setAuditLogs(INITIAL_AUDIT_LOGS);
     setSyncLogs(INITIAL_SYNC_LOGS);
     setGoogleSettings(INITIAL_GOOGLE_SETTINGS);
+    setOnboardingSubmissions(INITIAL_ONBOARDING_SUBMISSIONS);
+    setUserInvitations(INITIAL_USER_INVITATIONS);
+    setContactRoleTasks(INITIAL_CONTACT_ROLE_TASKS);
+    setSupabaseConfig(INITIAL_SUPABASE_CONFIG);
   };
 
   // Derived KPI metrics
@@ -1085,6 +1447,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const totalFinishedDeals = deals.filter(d => d.stageId === 'closed_won' || d.stageId === 'closed_lost').length;
   const winRate = totalFinishedDeals > 0 ? Math.round((closedDealsWonCount / totalFinishedDeals) * 100) : 75;
+  const unapprovedOnboardingCount = onboardingSubmissions.filter(s => s.approvalStatus === 'unapproved').length;
 
   return (
     <AppContext.Provider
@@ -1135,6 +1498,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         syncLogs,
         triggerGoogleSync,
         importHistoricalInquiries,
+        onboardingSubmissions,
+        userInvitations,
+        inviteUserByEmail,
+        submitOnboardingForm,
+        toggleOnboardingApproval,
+        simulateSheetApprovalWebhook,
+        triggerSheetsOnboardingSync,
+        contactRoleTasks,
+        addContactRoleTask,
+        updateContactRoleTaskStatus,
+        supabaseConfig,
+        updateSupabaseConfig,
         notifications,
         markNotificationAsRead,
         markAllNotificationsAsRead,
@@ -1157,7 +1532,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           overdueFollowUpsCount,
           pipelineTotalValue,
           weightedPipelineValue,
-          winRate
+          winRate,
+          unapprovedOnboardingCount
         }
       }}
     >
