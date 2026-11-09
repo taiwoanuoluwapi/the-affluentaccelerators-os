@@ -10,7 +10,10 @@ import {
   ExternalLink,
   ChevronDown,
   Sparkles,
-  RotateCcw
+  RotateCcw,
+  Menu,
+  User,
+  LogOut
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { formatRelativeTime } from '../../utils/formatters';
@@ -23,6 +26,7 @@ interface TopNavProps {
   onOpenNewContact: () => void;
   onOpenLogActivity: () => void;
   onOpenGoogleModal: () => void;
+  onOpenProfileModal: () => void;
 }
 
 export const TopNav: React.FC<TopNavProps> = ({
@@ -32,7 +36,8 @@ export const TopNav: React.FC<TopNavProps> = ({
   onOpenNewDeal,
   onOpenNewContact,
   onOpenLogActivity,
-  onOpenGoogleModal
+  onOpenGoogleModal,
+  onOpenProfileModal
 }) => {
   const {
     currentUser,
@@ -45,7 +50,9 @@ export const TopNav: React.FC<TopNavProps> = ({
     markAllNotificationsAsRead,
     globalSearchQuery,
     setGlobalSearchQuery,
-    resetToInitialData
+    resetToInitialData,
+    setMobileSidebarOpen,
+    logout
   } = useApp();
 
   const [isSyncing, setIsSyncing] = useState(false);
@@ -58,13 +65,13 @@ export const TopNav: React.FC<TopNavProps> = ({
 
   const handleSyncClick = async () => {
     setIsSyncing(true);
-    setSyncMessage('Connecting to Google Sheets & Drive...');
+    setSyncMessage('Syncing...');
     try {
       const res = await triggerGoogleSync();
-      setSyncMessage(res.count > 0 ? `Synced! 1 new lead imported.` : `Synced! Database up to date.`);
+      setSyncMessage(res.count > 0 ? `+${res.count} Lead` : `Up to date`);
       setTimeout(() => setSyncMessage(null), 3000);
     } catch {
-      setSyncMessage('Sync encountered an issue.');
+      setSyncMessage('Error');
       setTimeout(() => setSyncMessage(null), 3000);
     } finally {
       setIsSyncing(false);
@@ -74,134 +81,147 @@ export const TopNav: React.FC<TopNavProps> = ({
   const getPageTitle = (tab: string) => {
     switch (tab) {
       case 'overview':
-        return 'Executive & Operations Dashboard';
+        return 'Overview';
       case 'inquiries':
-        return 'Inquiry Management System';
+        return 'Inquiries';
       case 'contacts':
-        return 'CRM & Organisation Directory';
+        return 'CRM & Contacts';
       case 'pipeline':
-        return 'Sales Pipeline & Deals';
+        return 'Sales Pipeline';
       case 'activities':
-        return 'Business Development & Follow-up Workspace';
+        return 'BD Workspace';
       case 'projects':
-        return 'Consulting Engagements & Projects';
+        return 'Consulting Projects';
       case 'team':
-        return 'Consultant Directory & Workload Distribution';
+        return 'Team Directory';
       case 'reports':
-        return 'Business Intelligence & Executive Analytics';
+        return 'Analytics & BI';
       case 'documents':
-        return 'Google Drive & Document Vault';
+        return 'Documents Vault';
       case 'notifications':
-        return 'Notification Center';
+        return 'Notifications';
       case 'settings':
-        return 'Platform Settings & Governance';
+        return 'Settings & Governance';
       default:
         return 'AffluentOS';
     }
   };
 
   return (
-    <header className="h-16 bg-white border-b border-slate-200 px-6 flex items-center justify-between z-20 shadow-xs">
-      {/* Left: View title & Breadcrumb */}
-      <div className="flex items-center space-x-3">
-        <h1 className="text-lg font-bold text-slate-800 tracking-tight flex items-center space-x-2">
-          <span>{getPageTitle(currentTab)}</span>
-        </h1>
-        <div className="hidden lg:flex items-center text-xs text-slate-400 space-x-1.5 font-medium">
+    <header className="h-16 bg-white border-b border-slate-200 px-3 sm:px-6 flex items-center justify-between z-20 shadow-xs shrink-0">
+      {/* Left: Mobile Hamburger & Page Title */}
+      <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
+        <button
+          onClick={() => setMobileSidebarOpen(true)}
+          className="md:hidden p-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors shrink-0"
+          title="Open Menu"
+        >
+          <Menu size={20} />
+        </button>
+
+        <div className="min-w-0">
+          <h1 className="text-sm sm:text-base md:text-lg font-bold text-slate-900 tracking-tight truncate">
+            {getPageTitle(currentTab)}
+          </h1>
+        </div>
+
+        <div className="hidden xl:flex items-center text-xs text-slate-400 space-x-1.5 font-medium shrink-0">
           <span>•</span>
-          <span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 font-medium">
-            Affluentaccelerators Internal
+          <span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 font-medium text-[11px]">
+            The Affluentaccelerators
           </span>
         </div>
       </div>
 
-      {/* Middle: Global Search */}
-      <div className="hidden md:flex items-center flex-1 max-w-md mx-6">
+      {/* Middle: Global Search (Desktop & Tablet) */}
+      <div className="hidden md:flex items-center flex-1 max-w-xs lg:max-w-md mx-3 lg:mx-6">
         <div className="relative w-full">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={15} />
           <input
             type="text"
             value={globalSearchQuery}
             onChange={e => setGlobalSearchQuery(e.target.value)}
-            placeholder="Search inquiries, contacts, deals, projects, team..."
-            className="w-full pl-9 pr-10 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600/20 focus:border-emerald-600 transition-all"
+            placeholder="Search inquiries, contacts, deals..."
+            className="w-full pl-9 pr-10 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600/20 focus:border-emerald-600 transition-all"
           />
-          {globalSearchQuery && (
-            <button
-              onClick={() => setGlobalSearchQuery('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-slate-600 font-mono"
-            >
-              ESC
-            </button>
-          )}
         </div>
       </div>
 
       {/* Right Actions */}
-      <div className="flex items-center space-x-3">
+      <div className="flex items-center space-x-1.5 sm:space-x-2.5 shrink-0">
+        {/* Mobile Search Button */}
+        <button
+          onClick={() => {
+            const query = prompt('Search AffluentOS (Inquiries, Contacts, Deals, Projects):');
+            if (query) setGlobalSearchQuery(query);
+          }}
+          className="md:hidden p-1.5 text-slate-600 hover:bg-slate-100 rounded-lg"
+          title="Search"
+        >
+          <Search size={18} />
+        </button>
+
         {/* Google Sheets Live Sync Pill */}
-        <div className="relative">
-          <button
-            onClick={handleSyncClick}
-            disabled={isSyncing}
-            className={`flex items-center space-x-2 px-3 py-1.5 rounded-lg border text-xs font-medium transition-all ${
-              isSyncing
-                ? 'bg-amber-50 border-amber-300 text-amber-800'
-                : 'bg-emerald-50/70 hover:bg-emerald-100 border-emerald-200 text-emerald-800'
-            }`}
-            title="Synchronise latest entries from Google Sheets and Google Drive"
-          >
-            <RefreshCw
-              size={13}
-              className={`text-emerald-600 ${isSyncing ? 'animate-spin text-amber-600' : ''}`}
-            />
-            <span className="hidden sm:inline font-semibold">Google Sheets</span>
-            <span className="hidden md:inline text-slate-500 font-normal">
-              {syncMessage || (isSyncing ? 'Syncing...' : formatRelativeTime(googleSettings.lastSyncedAt))}
-            </span>
-          </button>
-        </div>
+        <button
+          onClick={handleSyncClick}
+          disabled={isSyncing}
+          className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-medium transition-all ${
+            isSyncing
+              ? 'bg-amber-50 border-amber-300 text-amber-800'
+              : 'bg-emerald-50/70 hover:bg-emerald-100 border-emerald-200 text-emerald-800'
+          }`}
+          title="Synchronise latest entries from Google Sheets & Drive"
+        >
+          <RefreshCw
+            size={13}
+            className={`text-emerald-600 ${isSyncing ? 'animate-spin text-amber-600' : ''}`}
+          />
+          <span className="hidden sm:inline font-semibold">Sheets</span>
+          <span className="hidden lg:inline text-slate-500 font-normal text-[11px]">
+            {syncMessage || formatRelativeTime(googleSettings.lastSyncedAt)}
+          </span>
+        </button>
 
         {/* Quick New Dropdown */}
         <div className="relative">
           <button
             onClick={() => setNewDropdownOpen(!newDropdownOpen)}
-            className="flex items-center space-x-1.5 bg-emerald-700 hover:bg-emerald-800 text-white px-3.5 py-1.5 rounded-lg text-xs font-semibold shadow-xs transition-colors"
+            className="flex items-center space-x-1 bg-emerald-700 hover:bg-emerald-800 text-white px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold shadow-xs transition-colors"
           >
             <Plus size={15} />
-            <span className="hidden sm:inline">New Record</span>
-            <ChevronDown size={13} className="opacity-80" />
+            <span className="hidden sm:inline">New</span>
+            <ChevronDown size={12} className="opacity-80" />
           </button>
 
           {newDropdownOpen && (
             <div
-              className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-floating border border-slate-200 py-1.5 z-50 text-sm animate-in fade-in zoom-in-95 duration-100"
+              className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-floating border border-slate-200 py-1.5 z-50 text-xs animate-in fade-in zoom-in-95 duration-100"
               onClick={() => setNewDropdownOpen(false)}
             >
               <button
                 onClick={onOpenNewInquiry}
-                className="w-full text-left px-3.5 py-2 text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 flex items-center space-x-2.5"
+                className="w-full text-left px-3.5 py-2 text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 flex items-center space-x-2"
               >
                 <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
                 <span>New Inquiry / Lead</span>
               </button>
               <button
                 onClick={onOpenNewDeal}
-                className="w-full text-left px-3.5 py-2 text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 flex items-center space-x-2.5"
+                className="w-full text-left px-3.5 py-2 text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 flex items-center space-x-2"
               >
                 <div className="w-2 h-2 rounded-full bg-amber-500"></div>
                 <span>New Sales Deal</span>
               </button>
               <button
                 onClick={onOpenLogActivity}
-                className="w-full text-left px-3.5 py-2 text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 flex items-center space-x-2.5"
+                className="w-full text-left px-3.5 py-2 text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 flex items-center space-x-2"
               >
                 <div className="w-2 h-2 rounded-full bg-blue-500"></div>
                 <span>Log BD Activity / Call</span>
               </button>
               <button
                 onClick={onOpenNewContact}
-                className="w-full text-left px-3.5 py-2 text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 flex items-center space-x-2.5"
+                className="w-full text-left px-3.5 py-2 text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 flex items-center space-x-2"
               >
                 <div className="w-2 h-2 rounded-full bg-purple-500"></div>
                 <span>Add Contact / Client</span>
@@ -209,9 +229,9 @@ export const TopNav: React.FC<TopNavProps> = ({
               <div className="border-t border-slate-100 my-1"></div>
               <button
                 onClick={onOpenGoogleModal}
-                className="w-full text-left px-3.5 py-2 text-slate-600 hover:bg-slate-50 flex items-center space-x-2.5 text-xs"
+                className="w-full text-left px-3.5 py-2 text-slate-600 hover:bg-slate-50 flex items-center space-x-2 text-[11px]"
               >
-                <FileSpreadsheet size={14} className="text-emerald-600" />
+                <FileSpreadsheet size={13} className="text-emerald-600" />
                 <span>Google Integration Setup</span>
               </button>
             </div>
@@ -222,31 +242,31 @@ export const TopNav: React.FC<TopNavProps> = ({
         <div className="relative">
           <button
             onClick={() => setNotifDropdownOpen(!notifDropdownOpen)}
-            className="relative p-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+            className="relative p-1.5 sm:p-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
             title="Notifications"
           >
             <Bell size={18} />
             {unreadCount > 0 && (
-              <span className="absolute top-1 right-1 w-4 h-4 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center animate-pulse">
+              <span className="absolute top-1 right-1 w-4 h-4 rounded-full bg-rose-500 text-white text-[9px] font-bold flex items-center justify-center animate-pulse">
                 {unreadCount}
               </span>
             )}
           </button>
 
           {notifDropdownOpen && (
-            <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-floating border border-slate-200 py-2 z-50 animate-in fade-in zoom-in-95 duration-100">
+            <div className="absolute right-0 mt-2 w-72 sm:w-80 bg-white rounded-xl shadow-floating border border-slate-200 py-2 z-50 animate-in fade-in zoom-in-95 duration-100">
               <div className="px-4 py-2 border-b border-slate-100 flex items-center justify-between">
-                <span className="font-bold text-sm text-slate-800">In-App Notifications</span>
+                <span className="font-bold text-xs text-slate-800">Notifications</span>
                 {unreadCount > 0 && (
                   <button
                     onClick={markAllNotificationsAsRead}
-                    className="text-xs text-emerald-700 hover:underline font-medium"
+                    className="text-[11px] text-emerald-700 hover:underline font-medium"
                   >
                     Mark all read
                   </button>
                 )}
               </div>
-              <div className="max-h-72 overflow-y-auto divide-y divide-slate-100">
+              <div className="max-h-64 overflow-y-auto divide-y divide-slate-100">
                 {notifications.slice(0, 5).map(n => (
                   <div
                     key={n.id}
@@ -263,12 +283,12 @@ export const TopNav: React.FC<TopNavProps> = ({
                     }`}
                   >
                     <div className="flex items-center justify-between text-slate-800 mb-0.5">
-                      <span className="font-semibold truncate">{n.title}</span>
-                      <span className="text-[10px] text-slate-400 font-normal shrink-0">
+                      <span className="font-semibold truncate text-[11px]">{n.title}</span>
+                      <span className="text-[9px] text-slate-400 font-normal shrink-0">
                         {formatRelativeTime(n.createdAt)}
                       </span>
                     </div>
-                    <p className="text-slate-600 leading-snug line-clamp-2">{n.message}</p>
+                    <p className="text-slate-600 text-[11px] leading-snug line-clamp-2">{n.message}</p>
                   </div>
                 ))}
               </div>
@@ -287,23 +307,25 @@ export const TopNav: React.FC<TopNavProps> = ({
           )}
         </div>
 
-        {/* User Role Switcher Dropdown (Super Admin RBAC Simulation) */}
+        {/* User Role Switcher & Profile Dropdown */}
         <div className="relative">
           <button
             onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-            className="flex items-center space-x-2 pl-2 pr-2.5 py-1 rounded-xl hover:bg-slate-100 border border-transparent hover:border-slate-200 transition-all"
-            title="Switch User Role Persona"
+            className="flex items-center space-x-1.5 p-1 rounded-xl hover:bg-slate-100 border border-transparent hover:border-slate-200 transition-all"
+            title="User Profile & RBAC Role Switcher"
           >
             <img
               src={currentUser.avatar}
               alt={currentUser.name}
-              className="w-7 h-7 rounded-full object-cover border border-emerald-600"
+              className="w-7 h-7 sm:w-8 sm:h-8 rounded-full object-cover border border-emerald-600 shadow-2xs"
             />
-            <div className="hidden xl:flex flex-col text-left">
+            <div className="hidden lg:flex flex-col text-left">
               <span className="text-xs font-bold text-slate-800 leading-tight">{currentUser.name}</span>
-              <span className="text-[10px] text-emerald-700 font-medium leading-tight">{currentUser.role.replace('_', ' ')}</span>
+              <span className="text-[10px] text-emerald-700 font-medium leading-tight">
+                {currentUser.role.replace('_', ' ')}
+              </span>
             </div>
-            <ChevronDown size={14} className="text-slate-400" />
+            <ChevronDown size={13} className="text-slate-400 hidden sm:block" />
           </button>
 
           {userDropdownOpen && (
@@ -312,29 +334,38 @@ export const TopNav: React.FC<TopNavProps> = ({
               onClick={() => setUserDropdownOpen(false)}
             >
               <div className="px-4 py-2 border-b border-slate-100">
-                <div className="flex items-center space-x-1.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                  <Shield size={13} className="text-emerald-700" />
-                  <span>Switch Team Role (RBAC)</span>
-                </div>
-                <p className="text-[11px] text-slate-400 mt-0.5">
-                  Test and inspect the platform from any team member perspective:
-                </p>
+                <span className="font-bold text-xs text-slate-900 block truncate">{currentUser.name}</span>
+                <span className="text-[10px] text-slate-400 block truncate font-mono">{currentUser.email}</span>
+                <button
+                  onClick={onOpenProfileModal}
+                  className="mt-2 w-full py-1.5 px-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded-lg text-xs font-semibold flex items-center justify-center space-x-1.5 transition-colors"
+                >
+                  <User size={12} />
+                  <span>Manage Profile & Security</span>
+                </button>
               </div>
 
-              <div className="py-1 max-h-64 overflow-y-auto">
+              <div className="px-4 py-1.5 border-b border-slate-100">
+                <div className="flex items-center space-x-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                  <Shield size={11} className="text-emerald-700" />
+                  <span>Switch Team Persona (RBAC)</span>
+                </div>
+              </div>
+
+              <div className="py-1 max-h-56 overflow-y-auto">
                 {users.map(u => (
                   <button
                     key={u.id}
                     onClick={() => switchUser(u.id)}
-                    className={`w-full px-4 py-2 text-left flex items-center space-x-3 hover:bg-slate-50 transition-colors ${
+                    className={`w-full px-4 py-1.5 text-left flex items-center space-x-2.5 hover:bg-slate-50 transition-colors ${
                       u.id === currentUser.id ? 'bg-emerald-50 text-emerald-900 font-semibold' : 'text-slate-700'
                     }`}
                   >
-                    <img src={u.avatar} alt={u.name} className="w-8 h-8 rounded-full object-cover shrink-0" />
+                    <img src={u.avatar} alt="" className="w-6 h-6 rounded-full object-cover shrink-0" />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
                         <span className="text-xs truncate">{u.name}</span>
-                        {u.id === currentUser.id && <CheckCircle2 size={14} className="text-emerald-600 shrink-0" />}
+                        {u.id === currentUser.id && <CheckCircle2 size={13} className="text-emerald-600 shrink-0" />}
                       </div>
                       <span className="text-[10px] text-slate-400 block truncate">{u.title}</span>
                     </div>
@@ -342,17 +373,24 @@ export const TopNav: React.FC<TopNavProps> = ({
                 ))}
               </div>
 
-              <div className="border-t border-slate-100 pt-2 px-3 pb-1">
+              <div className="border-t border-slate-100 pt-2 px-3 pb-1 space-y-1">
                 <button
                   onClick={() => {
                     if (confirm('Reset AffluentOS to clean initial operational dataset?')) {
                       resetToInitialData();
                     }
                   }}
-                  className="w-full flex items-center justify-center space-x-1.5 py-1.5 text-[11px] font-medium text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                  className="w-full flex items-center justify-center space-x-1.5 py-1 text-[11px] font-medium text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
                 >
                   <RotateCcw size={12} />
-                  <span>Reset Demo Operational Data</span>
+                  <span>Reset Demo Data</span>
+                </button>
+                <button
+                  onClick={logout}
+                  className="w-full flex items-center justify-center space-x-1.5 py-1.5 text-[11px] font-bold text-rose-700 hover:bg-rose-50 rounded-lg transition-colors"
+                >
+                  <LogOut size={12} />
+                  <span>Sign Out</span>
                 </button>
               </div>
             </div>
