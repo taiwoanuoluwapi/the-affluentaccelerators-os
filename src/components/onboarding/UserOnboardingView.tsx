@@ -487,76 +487,147 @@ USING (
       {/* TAB 1: ONBOARDING QUEUE & APPROVALS BOARD */}
       {activeTab === 'queue' && (
         <div className="bg-white rounded-b-2xl border border-slate-200 shadow-card p-4 sm:p-6 space-y-5">
-          {/* Controls Bar */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="flex items-center space-x-2 flex-1 max-w-md">
-              <input
-                type="text"
-                placeholder="Search candidate name, email, department, or role..."
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                className="w-full px-3.5 py-2 text-xs bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-emerald-500"
-              />
+          {/* Controls Bar & Segment Filters */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+            {/* Filter Pills */}
+            <div className="flex flex-wrap items-center gap-1.5 p-1 bg-slate-100 rounded-xl border border-slate-200 text-xs">
+              <button
+                onClick={() => setStatusFilter('all')}
+                className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
+                  statusFilter === 'all'
+                    ? 'bg-white text-slate-900 shadow-2xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                All Applications ({onboardingSubmissions.length})
+              </button>
+
+              <button
+                onClick={() => setStatusFilter('unapproved')}
+                className={`px-3 py-1.5 rounded-lg font-bold transition-all flex items-center space-x-1.5 cursor-pointer ${
+                  statusFilter === 'unapproved'
+                    ? 'bg-amber-500 text-white shadow-2xs'
+                    : 'text-amber-800 hover:bg-amber-100/50'
+                }`}
+              >
+                <span>Pending Approvals</span>
+                <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
+                  statusFilter === 'unapproved' ? 'bg-amber-600 text-white' : 'bg-amber-200 text-amber-900'
+                }`}>
+                  {unapprovedCount}
+                </span>
+              </button>
+
+              <button
+                onClick={() => setStatusFilter('approved')}
+                className={`px-3 py-1.5 rounded-lg font-bold transition-all flex items-center space-x-1.5 cursor-pointer ${
+                  statusFilter === 'approved'
+                    ? 'bg-emerald-700 text-white shadow-2xs'
+                    : 'text-emerald-800 hover:bg-emerald-100/50'
+                }`}
+              >
+                <span>Approved & Active</span>
+                <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
+                  statusFilter === 'approved' ? 'bg-emerald-800 text-white' : 'bg-emerald-200 text-emerald-900'
+                }`}>
+                  {approvedCount}
+                </span>
+              </button>
             </div>
 
-            <div className="flex items-center space-x-2 text-xs">
-              <span className="text-slate-500 font-medium">Filter Status:</span>
-              <select
-                value={statusFilter}
-                onChange={e => setStatusFilter(e.target.value)}
-                className="px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold focus:outline-hidden focus:ring-2 focus:ring-emerald-500"
-              >
-                <option value="all">All Submissions ({onboardingSubmissions.length})</option>
-                <option value="unapproved">Pending Approvals ({unapprovedCount})</option>
-                <option value="approved">Approved & Active ({approvedCount})</option>
-              </select>
+            {/* Search and Batch Actions */}
+            <div className="flex items-center space-x-2 flex-1 md:justify-end">
+              <div className="relative flex-1 max-w-xs">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
+                <input
+                  type="text"
+                  placeholder="Search candidate name, email, role..."
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  className="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-emerald-500"
+                />
+              </div>
+
+              {unapprovedCount > 0 && (
+                <button
+                  onClick={handleBatchApprove}
+                  disabled={isBatchApproving}
+                  className="px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold shadow-xs hover:shadow-md transition-all flex items-center space-x-1.5 cursor-pointer disabled:opacity-50 shrink-0"
+                  title="Approve all pending candidates at once"
+                >
+                  <CheckCheck size={14} className={isBatchApproving ? 'animate-spin' : ''} />
+                  <span>{isBatchApproving ? 'Approving...' : `Batch Approve (${unapprovedCount})`}</span>
+                </button>
+              )}
             </div>
           </div>
 
-          {/* Submissions Table */}
-          <div className="overflow-x-auto border border-slate-200 rounded-xl">
+          {/* Submissions Clean SaaS List */}
+          <div className="overflow-x-auto border border-slate-200 rounded-2xl shadow-2xs">
             <table className="w-full text-left border-collapse text-xs">
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px] tracking-wider">
-                  <th className="py-3 px-3.5">Candidate / User</th>
+                  <th className="py-3 px-4">Candidate / Applicant</th>
                   <th className="py-3 px-3.5">Assigned Role & Unit</th>
-                  <th className="py-3 px-3.5">Google Sheet Section & Row</th>
-                  <th className="py-3 px-3.5">Submitted / Invited</th>
-                  <th className="py-3 px-3.5 text-center">Boolean Approval Status</th>
-                  <th className="py-3 px-3.5 text-right">Actions</th>
+                  <th className="py-3 px-3.5">Google Sheet Mapping</th>
+                  <th className="py-3 px-3.5">Approval Status</th>
+                  <th className="py-3 px-4 text-right">Approval Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-200">
+              <tbody className="divide-y divide-slate-200 bg-white">
                 {filteredSubmissions.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="text-center py-8 text-slate-400">
-                      No onboarding applications matching current filter.
+                    <td colSpan={5} className="text-center py-10 text-slate-400">
+                      <div className="max-w-xs mx-auto space-y-1">
+                        <UserCheck size={32} className="mx-auto text-slate-300 mb-2" />
+                        <p className="font-semibold text-slate-600">No candidate submissions found</p>
+                        <p className="text-[11px] text-slate-400">
+                          {statusFilter === 'unapproved'
+                            ? 'All candidate applications are currently approved and active!'
+                            : 'No onboarding records match the selected filter.'}
+                        </p>
+                      </div>
                     </td>
                   </tr>
                 ) : (
                   filteredSubmissions.map(sub => {
                     const roleBadge = getRoleBadge(sub.requestedRole);
                     const isApproved = sub.approvalStatus === 'approved';
+                    const isCurrentlyApproving = approvingId === sub.id;
 
                     return (
                       <tr
                         key={sub.id}
                         className={`hover:bg-slate-50/80 transition-colors ${
-                          !isApproved ? 'bg-amber-50/20' : ''
+                          !isApproved ? 'bg-amber-50/25' : ''
                         }`}
                       >
                         {/* Candidate */}
-                        <td className="py-3.5 px-3.5">
+                        <td className="py-3.5 px-4">
                           <div className="flex items-center space-x-3">
-                            <div className="w-8 h-8 rounded-full bg-slate-200 text-slate-700 font-bold flex items-center justify-center text-xs shrink-0">
+                            <div className={`w-9 h-9 rounded-full font-bold flex items-center justify-center text-xs shrink-0 ${
+                              isApproved
+                                ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                                : 'bg-amber-100 text-amber-900 border border-amber-300'
+                            }`}>
                               {sub.fullName.charAt(0)}
                             </div>
                             <div>
-                              <div className="font-bold text-slate-900">{sub.fullName}</div>
-                              <div className="text-[11px] text-slate-500 flex items-center space-x-1.5">
+                              <div className="flex items-center space-x-2">
+                                <span className="font-bold text-slate-900">{sub.fullName}</span>
+                                {!isApproved && (
+                                  <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-amber-100 text-amber-800 border border-amber-300">
+                                    Needs Approval
+                                  </span>
+                                )}
+                              </div>
+                              <div className="text-[11px] text-slate-500 flex items-center space-x-1.5 mt-0.5">
                                 <span>{sub.email}</span>
                                 <span>•</span>
                                 <span>{sub.phone}</span>
+                              </div>
+                              <div className="text-[10px] text-slate-400 mt-0.5">
+                                Submitted {formatDate(sub.submittedAt)} • Invited by: {sub.invitedBy || 'Direct Registration'}
                               </div>
                             </div>
                           </div>
@@ -565,10 +636,10 @@ USING (
                         {/* Role & Dept */}
                         <td className="py-3.5 px-3.5">
                           <div className="space-y-1">
-                            <span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-full border ${roleBadge.color}`}>
+                            <span className={`inline-block text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${roleBadge.color}`}>
                               {roleBadge.label}
                             </span>
-                            <div className="text-[11px] text-slate-500 font-medium">
+                            <div className="text-[11px] text-slate-600 font-medium">
                               {sub.department}
                             </div>
                           </div>
@@ -576,59 +647,78 @@ USING (
 
                         {/* Google Sheet Reference */}
                         <td className="py-3.5 px-3.5">
-                          <div className="flex items-center space-x-1.5 font-mono text-[11px]">
-                            <FileSpreadsheet size={14} className="text-emerald-700 shrink-0" />
+                          <div className="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-200 font-mono text-[11px]">
+                            <FileSpreadsheet size={13} className="text-emerald-700 shrink-0" />
                             <div>
-                              <div className="font-bold text-slate-800">
+                              <div className="font-bold text-slate-800 text-[10px]">
                                 Tab: [{sub.googleSheetTab}]
                               </div>
                               <div className="text-[10px] text-slate-500">
-                                Row #{sub.googleSheetRowIndex} • Col J (Status)
+                                Row #{sub.googleSheetRowIndex} • Col J ({sub.approvalStatus})
                               </div>
                             </div>
                           </div>
                         </td>
 
-                        {/* Submitted Date */}
-                        <td className="py-3.5 px-3.5 text-slate-600 text-[11px]">
-                          <div>{formatDate(sub.submittedAt)}</div>
-                          <div className="text-[10px] text-slate-400">
-                            Invited by: {sub.invitedBy || 'Direct Request'}
-                          </div>
+                        {/* Status */}
+                        <td className="py-3.5 px-3.5">
+                          {isApproved ? (
+                            <div className="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 text-xs font-bold">
+                              <CheckCircle2 size={13} className="text-emerald-600" />
+                              <span>Approved & Active</span>
+                            </div>
+                          ) : (
+                            <div className="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-amber-100 text-amber-900 border border-amber-300 text-xs font-bold">
+                              <Clock size={13} className="text-amber-600" />
+                              <span>Pending Approval</span>
+                            </div>
+                          )}
                         </td>
 
-                        {/* Boolean Status Toggle */}
-                        <td className="py-3.5 px-3.5 text-center">
-                          <div className="inline-flex flex-col items-center space-y-1">
-                            <button
-                              onClick={() => handleToggleStatus(sub)}
-                              title="Click to toggle status on the Google Sheet and activate/deactivate in Supabase"
-                              className={`px-3 py-1 rounded-full font-mono text-[11px] font-bold border transition-all flex items-center space-x-1.5 cursor-pointer shadow-2xs ${
-                                isApproved
-                                  ? 'bg-emerald-100 text-emerald-800 border-emerald-300 hover:bg-emerald-200'
-                                  : 'bg-amber-100 text-amber-900 border-amber-300 hover:bg-amber-200'
-                              }`}
-                            >
-                              <span className={`w-2 h-2 rounded-full ${isApproved ? 'bg-emerald-600' : 'bg-amber-600'}`}></span>
-                              <span>{sub.approvalStatus}</span>
-                            </button>
-                            <span className="text-[9px] text-slate-400">
-                              (Click to flip boolean)
-                            </span>
-                          </div>
-                        </td>
-
-                        {/* Actions */}
-                        <td className="py-3.5 px-3.5 text-right">
+                        {/* Primary One-Click Action */}
+                        <td className="py-3.5 px-4 text-right">
                           <div className="flex items-center justify-end space-x-2">
+                            {!isApproved ? (
+                              <button
+                                onClick={() => handleApproveUser(sub)}
+                                disabled={isCurrentlyApproving}
+                                className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 shadow-sm hover:shadow-md cursor-pointer disabled:opacity-60"
+                                title="Click to approve user immediately: updates Google Sheet and activates Supabase Auth"
+                              >
+                                {isCurrentlyApproving ? (
+                                  <>
+                                    <RefreshCw size={13} className="animate-spin text-white" />
+                                    <span>Approving...</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <CheckCircle2 size={14} />
+                                    <span>Approve User</span>
+                                  </>
+                                )}
+                              </button>
+                            ) : (
+                              <div className="flex items-center space-x-1.5">
+                                <span className="text-[11px] font-semibold text-emerald-800 bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-200">
+                                  ✓ Supabase Active
+                                </span>
+                                <button
+                                  onClick={() => handleToggleStatus(sub)}
+                                  title="Revoke user access (set to unapproved)"
+                                  className="text-[11px] text-slate-400 hover:text-rose-600 hover:underline px-1 py-1"
+                                >
+                                  Revoke
+                                </button>
+                              </div>
+                            )}
+
                             {!isApproved && (
                               <button
                                 onClick={() => handleSimulateWebhook(sub)}
-                                title="Simulate someone changing cell J in the actual Google Sheet to 'approved' via Google Apps Script onEdit trigger"
-                                className="px-2.5 py-1 text-[10px] font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg border border-slate-300 transition-colors cursor-pointer flex items-center space-x-1"
+                                title="Simulate Google Sheets onEdit() webhook firing for this row"
+                                className="p-1.5 text-slate-400 hover:text-amber-700 hover:bg-amber-50 rounded-lg transition-colors cursor-pointer border border-transparent hover:border-amber-200"
                               >
-                                <Sparkles size={11} className="text-amber-600" />
-                                <span>Simulate Sheet onEdit</span>
+                                <Sparkles size={14} />
                               </button>
                             )}
 
@@ -653,20 +743,20 @@ USING (
           <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-xs text-slate-600 space-y-2">
             <div className="flex items-center space-x-2 font-bold text-slate-800">
               <FileSpreadsheet size={16} className="text-emerald-700" />
-              <span>How The Google Sheet Boolean Approval Workflow Operates:</span>
+              <span>How The Google Sheet & Direct Approval Workflow Operates:</span>
             </div>
             <ol className="list-decimal pl-5 space-y-1 text-[11px] text-slate-600 leading-relaxed">
               <li>
-                When an applicant submits the Onboarding Form, it inserts a new row in Google Sheets tab <span className="font-mono font-bold text-slate-800">[{googleSettings.onboardingSheetName || 'User Onboarding & Approvals'}]</span> with status cell set to <span className="font-mono font-bold text-amber-800">"unapproved"</span>.
+                <strong>Public Form Submission:</strong> When an applicant submits the Onboarding Form, a new row is appended to Google Sheets tab <span className="font-mono font-bold text-slate-800">[{googleSettings.onboardingSheetName || 'User Onboarding & Approvals'}]</span> with status <span className="font-mono font-bold text-amber-800">"unapproved"</span>.
               </li>
               <li>
-                In Supabase, their auth account is generated in an inactive state (<span className="font-mono text-slate-700">active = false</span>).
+                <strong>Direct One-Click Approval:</strong> Click the green <span className="font-bold text-emerald-800">"Approve User"</span> button on any pending row to instantly activate their Supabase Auth profile and update Google Sheet Column J to <span className="font-mono font-bold text-emerald-800">"approved"</span>.
               </li>
               <li>
-                The partner or administrator can review their submission right here in AffluentOS or open Google Sheets directly.
+                <strong>Automated Role-Based Starter Tasks:</strong> Once approved, the system automatically assigns role-tailored starter tasks on relevant client contacts (e.g. Initial Outreach for Sales Reps; Diagnostic Audit for Consultants).
               </li>
               <li>
-                Once you change the status cell in Google Sheets to <span className="font-mono font-bold text-emerald-800">"approved"</span>, Google Apps Script calls the webhook, flips the Supabase account to <span className="font-mono text-emerald-800">active = true</span>, and unlocks role-based tasks on assigned client contacts!
+                <strong>Two-Way Sheet Sync:</strong> If an executive edits the cell directly in Google Sheets, the Apps Script <span className="font-mono text-emerald-800">onEdit()</span> webhook triggers the same activation in Supabase!
               </li>
             </ol>
           </div>
@@ -1061,19 +1151,34 @@ USING (
             </div>
 
             <div className="flex items-center space-x-2 pt-2 border-t border-slate-100">
-              <button
-                onClick={() => {
-                  handleToggleStatus(selectedSubmission);
-                  setSelectedSubmission(null);
-                }}
-                className={`flex-1 py-2.5 rounded-xl text-xs font-bold cursor-pointer transition-colors text-white ${
-                  selectedSubmission.approvalStatus === 'approved'
-                    ? 'bg-amber-600 hover:bg-amber-700'
-                    : 'bg-emerald-700 hover:bg-emerald-800'
-                }`}
-              >
-                {selectedSubmission.approvalStatus === 'approved' ? 'Change to "unapproved"' : 'Approve on Sheet & Supabase'}
-              </button>
+              {selectedSubmission.approvalStatus === 'unapproved' ? (
+                <button
+                  onClick={() => {
+                    handleApproveUser(selectedSubmission);
+                    setSelectedSubmission(null);
+                  }}
+                  className="flex-1 py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold cursor-pointer transition-colors flex items-center justify-center space-x-1.5 shadow-sm"
+                >
+                  <CheckCircle2 size={15} />
+                  <span>Approve User & Activate Account</span>
+                </button>
+              ) : (
+                <div className="flex items-center space-x-2 flex-1">
+                  <div className="flex-1 py-2 px-3 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-xl text-xs font-bold flex items-center space-x-2">
+                    <CheckCircle2 size={15} className="text-emerald-600" />
+                    <span>Active in Supabase & Synced to Sheets</span>
+                  </div>
+                  <button
+                    onClick={() => {
+                      handleToggleStatus(selectedSubmission);
+                      setSelectedSubmission(null);
+                    }}
+                    className="py-2 px-3 bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-700 rounded-xl text-xs font-semibold transition-colors"
+                  >
+                    Revoke
+                  </button>
+                </div>
+              )}
               <button
                 onClick={() => setSelectedSubmission(null)}
                 className="py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold cursor-pointer transition-colors"
