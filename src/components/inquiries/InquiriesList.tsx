@@ -150,34 +150,42 @@ export const InquiriesList: React.FC<InquiriesListProps> = ({
     { id: 'converted', title: 'Converted to Deal', color: 'border-emerald-600' }
   ];
 
+  const consultingCount = inquiries.filter(i => i.category === 'Custom Business Consulting' || i.category === 'Business Strategy Requests').length;
+  const auditCount = inquiries.filter(i => i.category === 'Business Audit Requests').length;
+  const generalCount = inquiries.filter(i => i.category === 'General Business Inquiries' || i.category === 'Partnership Inquiries' || i.category === 'Business Advisory').length;
+
   return (
     <div className="space-y-4">
       {/* Header and Controls */}
       <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
           <div className="flex items-center space-x-3">
-            <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold">
-              <Inbox size={18} />
+            <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold shrink-0">
+              <Inbox size={20} />
             </div>
             <div>
-              <div className="flex items-center space-x-2">
-                <h2 className="text-base font-bold text-slate-800">Inquiry Management</h2>
-                <span className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-mono">
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="text-base font-bold text-slate-900">Inquiry & Lead Management</h2>
+                <span className="text-xs bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full font-mono font-bold">
                   {filteredInquiries.length} records
                 </span>
+                <div className="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full bg-emerald-100/70 text-emerald-800 text-[10px] font-bold border border-emerald-300">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse"></span>
+                  <span>Google Sheets Synced: [{googleSettings.spreadsheetName.trim()}]</span>
+                </div>
               </div>
-              <p className="text-xs text-slate-400">
-                Centralised website submissions, audit requests, and lead qualification workflow.
+              <p className="text-xs text-slate-400 mt-0.5">
+                Centralized website submissions, audit requests, and lead qualification pipeline.
               </p>
             </div>
           </div>
 
-          <div className="flex items-center space-x-2">
+          <div className="flex flex-wrap items-center gap-2">
             {/* View Mode Toggle */}
             <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
               <button
                 onClick={() => setViewMode('table')}
-                className={`p-1.5 rounded-lg text-xs font-semibold flex items-center space-x-1.5 transition-colors ${
+                className={`p-1.5 rounded-lg text-xs font-semibold flex items-center space-x-1.5 transition-colors cursor-pointer ${
                   viewMode === 'table' ? 'bg-white text-emerald-800 shadow-xs' : 'text-slate-500 hover:text-slate-800'
                 }`}
                 title="Table view"
@@ -187,7 +195,7 @@ export const InquiriesList: React.FC<InquiriesListProps> = ({
               </button>
               <button
                 onClick={() => setViewMode('kanban')}
-                className={`p-1.5 rounded-lg text-xs font-semibold flex items-center space-x-1.5 transition-colors ${
+                className={`p-1.5 rounded-lg text-xs font-semibold flex items-center space-x-1.5 transition-colors cursor-pointer ${
                   viewMode === 'kanban' ? 'bg-white text-emerald-800 shadow-xs' : 'text-slate-500 hover:text-slate-800'
                 }`}
                 title="Kanban view"
@@ -197,19 +205,30 @@ export const InquiriesList: React.FC<InquiriesListProps> = ({
               </button>
             </div>
 
-            {/* Google Integration Trigger */}
+            {/* Direct Google Sync Trigger */}
+            <button
+              onClick={handleDirectSync}
+              disabled={isSyncing}
+              className="flex items-center space-x-1.5 px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded-xl text-xs font-bold border border-emerald-300 transition-all cursor-pointer shadow-2xs disabled:opacity-60"
+              title="Query live Google Apps Script endpoint to synchronize master sheet rows"
+            >
+              <RefreshCw size={14} className={isSyncing ? 'animate-spin text-emerald-600' : 'text-emerald-700'} />
+              <span>{isSyncing ? 'Syncing...' : 'Google Sync'}</span>
+            </button>
+
+            {/* Google Config Modal */}
             <button
               onClick={onOpenGoogleModal}
-              className="flex items-center space-x-1.5 px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded-xl text-xs font-semibold border border-emerald-200 transition-colors"
+              className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs transition-colors cursor-pointer border border-slate-200"
+              title="Google Sheet & Apps Script Settings"
             >
-              <FileSpreadsheet size={15} className="text-emerald-600" />
-              <span className="hidden md:inline">Google Sync</span>
+              <FileSpreadsheet size={16} />
             </button>
 
             {/* Export CSV */}
             <button
               onClick={handleExport}
-              className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs transition-colors"
+              className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs transition-colors cursor-pointer border border-slate-200"
               title="Export to CSV"
             >
               <Download size={16} />
@@ -218,12 +237,72 @@ export const InquiriesList: React.FC<InquiriesListProps> = ({
             {/* New Inquiry */}
             <button
               onClick={onOpenNewInquiry}
-              className="flex items-center space-x-1.5 px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-semibold shadow-xs transition-colors"
+              className="flex items-center space-x-1.5 px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold shadow-xs hover:shadow transition-all cursor-pointer"
             >
               <Plus size={15} />
               <span>New Lead</span>
             </button>
           </div>
+        </div>
+
+        {/* Sync Feedback Toast */}
+        {syncFeedback && (
+          <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-900 flex items-center justify-between animate-in fade-in">
+            <div className="flex items-center space-x-2">
+              <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
+              <span className="font-medium">{syncFeedback}</span>
+            </div>
+            <button
+              onClick={() => setSyncFeedback(null)}
+              className="text-emerald-700 hover:underline text-[10px] font-bold"
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
+
+        {/* Quick Category Sheet Tabs */}
+        <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-slate-100 text-xs font-semibold">
+          <button
+            onClick={() => setCategoryFilter('all')}
+            className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
+              categoryFilter === 'all'
+                ? 'bg-emerald-800 text-white shadow-2xs font-bold'
+                : 'bg-slate-100 text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            All Sheets ({inquiries.length})
+          </button>
+          <button
+            onClick={() => setCategoryFilter('Business Audit Requests')}
+            className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
+              categoryFilter === 'Business Audit Requests'
+                ? 'bg-emerald-800 text-white shadow-2xs font-bold'
+                : 'bg-slate-100 text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            Tab: [Business Audits] ({auditCount})
+          </button>
+          <button
+            onClick={() => setCategoryFilter('Custom Business Consulting')}
+            className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
+              categoryFilter === 'Custom Business Consulting'
+                ? 'bg-emerald-800 text-white shadow-2xs font-bold'
+                : 'bg-slate-100 text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            Tab: [Consulting Inquiries] ({consultingCount})
+          </button>
+          <button
+            onClick={() => setCategoryFilter('General Business Inquiries')}
+            className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
+              categoryFilter === 'General Business Inquiries'
+                ? 'bg-emerald-800 text-white shadow-2xs font-bold'
+                : 'bg-slate-100 text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            Tab: [General Submissions] ({generalCount})
+          </button>
         </div>
 
         {/* Search & Filter Bar */}
