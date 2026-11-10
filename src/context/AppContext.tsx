@@ -44,6 +44,15 @@ import {
   INITIAL_SUPABASE_CONFIG
 } from '../data/initialData';
 import { isOverdue, isDueToday } from '../utils/formatters';
+import {
+  getSupabase,
+  testSupabaseConnection,
+  resetSupabaseClient,
+  fetchSupabaseProfile,
+  isSupabaseConfigured,
+  getSupabaseUrl,
+  getSupabaseKey
+} from '../lib/supabase';
 
 interface AppContextType {
   currentUser: User;
