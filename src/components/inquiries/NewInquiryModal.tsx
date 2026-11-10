@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { X, Plus, Sparkles, Building, User, Mail, Phone, DollarSign, Calendar } from 'lucide-react';
+import { X, Plus, Sparkles, Building, User, Mail, Phone, DollarSign, Calendar, FileSpreadsheet } from 'lucide-react';
 import { InquiryCategory, InquiryPriority } from '../../types';
 
 interface NewInquiryModalProps {
@@ -252,6 +252,13 @@ export const NewInquiryModal: React.FC<NewInquiryModalProps> = ({ isOpen, onClos
               rows={3}
               className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-600"
             />
+          </div>
+
+          <div className="bg-emerald-50/70 border border-emerald-200/80 rounded-xl p-3 flex items-center space-x-2 text-emerald-900 text-xs">
+            <FileSpreadsheet size={16} className="text-emerald-700 shrink-0" />
+            <span>
+              <strong>Google Sheets Sync:</strong> This lead will be automatically dispatched to your Google Apps Script endpoint and appended to master spreadsheet <strong>[Affluentaccelerators]</strong> with an official reference code.
+            </span>
           </div>
 
           <div className="flex justify-end space-x-2 pt-3 border-t border-slate-100">
