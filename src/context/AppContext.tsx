@@ -848,9 +848,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const fallbackRef = `AA-INQ-2026-${String(nextNum).padStart(4, '0')}`;
 
     let targetSheetName = 'Consulting Inquiries';
-    if (inquiryData.category === 'Business Audit Requests') {
+    if (inquiryData.category === 'One-Time Free Audit' || inquiryData.category === 'Business Audit Requests') {
       targetSheetName = 'Business Audits';
-    } else if (inquiryData.category === 'General Business Inquiries' || inquiryData.category === 'Partnership Inquiries') {
+    } else if (inquiryData.category === 'Paid In-Depth Strategy & Review') {
+      targetSheetName = 'Consulting Inquiries';
+    } else if (inquiryData.category === 'General Business Inquiry' || inquiryData.category === 'General Business Inquiries' || inquiryData.category === 'Partnership Inquiries') {
       targetSheetName = 'General Submissions';
     }
 
@@ -1381,7 +1383,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       annualRevenueRange: '₦1.5B+',
       currentChallenges: 'Foreign exchange supply chain bottlenecks, lubricant formulation QA certifications, and inventory loss.',
       businessObjectives: 'Execute operational plant audit and establish automated procurement ERP controls.',
-      category: 'Business Audit Requests' as const,
+      category: 'One-Time Free Audit' as const,
       requestedService: 'Plant Operational Diagnostic & Quality Assurance Audit',
       descriptionOfSupport: 'Comprehensive assessment of blending plant operations and supply chain controls.',
       specificQuestions: 'Do you offer ISO certification consulting?',
@@ -1506,7 +1508,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       annualRevenueRange: '₦300M - ₦600M',
       currentChallenges: 'Post-harvest grain loss and lack of structured aggregation warehouses.',
       businessObjectives: 'Build solar-powered storage silos and secure commercial off-take agreements.',
-      category: 'Business Strategy Requests' as const,
+      category: 'Paid In-Depth Strategy & Review' as const,
       requestedService: 'Grain Aggregation Strategy & Commercial Offtake Architecture',
       descriptionOfSupport: 'Design of cooperative governance and off-taker contract structuring.',
       specificQuestions: 'Do you help identify large institutional buyers like Nestlé or Flour Mills?',
