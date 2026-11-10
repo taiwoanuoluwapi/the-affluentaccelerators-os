@@ -65,7 +65,19 @@ export const InquiriesList: React.FC<InquiriesListProps> = ({
       inq.email.toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesStatus = statusFilter === 'all' || inq.status === statusFilter;
-    const matchesCategory = categoryFilter === 'all' || inq.category === categoryFilter;
+    const matchesCategory =
+      categoryFilter === 'all' ||
+      inq.category === categoryFilter ||
+      (categoryFilter === 'One-Time Free Audit' && (inq.category as string) === 'Business Audit Requests') ||
+      (categoryFilter === 'Paid In-Depth Strategy & Review' &&
+        ((inq.category as string) === 'Custom Business Consulting' ||
+          (inq.category as string) === 'Business Strategy Requests' ||
+          (inq.category as string) === 'Business Development Requests' ||
+          (inq.category as string) === 'Business Advisory')) ||
+      (categoryFilter === 'General Business Inquiry' &&
+        ((inq.category as string) === 'General Business Inquiries' ||
+          (inq.category as string) === 'Partnership Inquiries' ||
+          (inq.category as string) === 'Business Growth Support'));
     const matchesPriority = priorityFilter === 'all' || inq.priority === priorityFilter;
     const matchesAssigned =
       assignedFilter === 'all' ||
