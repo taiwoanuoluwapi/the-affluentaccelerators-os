@@ -477,7 +477,7 @@ export const INITIAL_INQUIRIES: Inquiry[] = [
     annualRevenueRange: '₦800M - ₦1.5B',
     currentChallenges: 'Working capital strain due to project milestone payment lags from clients.',
     businessObjectives: 'Restructure capital strategy and deploy vendor financing mechanisms.',
-    category: 'Business Advisory',
+    category: 'Paid In-Depth Strategy & Review',
     requestedService: 'Financial Advisory & Capital Structuring',
     descriptionOfSupport: 'Corporate advisory to raise ₦600M project finance facility.',
     specificQuestions: 'What is your advisory success fee structure?',
