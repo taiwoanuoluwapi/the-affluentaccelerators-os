@@ -12,3 +12,6 @@ DerivedData/
 .cache/
 .DS_Store
 *.log
+.antigravity/chats/
+.antigravity/relay-state.json
+
