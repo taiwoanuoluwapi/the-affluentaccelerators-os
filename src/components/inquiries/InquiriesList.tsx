@@ -408,7 +408,6 @@ export const InquiriesList: React.FC<InquiriesListProps> = ({
               );
             })}
           </select>
-          </select>
         </div>
 
         {/* Bulk Action Bar if items selected */}
