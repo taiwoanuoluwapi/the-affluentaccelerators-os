@@ -14,7 +14,8 @@ import {
   Calendar,
   ExternalLink,
   Eye,
-  AlertCircle
+  AlertCircle,
+  CheckSquare
 } from 'lucide-react';
 import { formatDate, exportToCSV } from '../../utils/formatters';
 import { Contact, ContactType } from '../../types';
@@ -28,7 +29,7 @@ export const ContactsList: React.FC<ContactsListProps> = ({
   onSelectContact,
   onOpenNewContact
 }) => {
-  const { contacts, organisations, users, checkDuplicates, mergeContacts, currentUser } = useApp();
+  const { contacts, organisations, users, checkDuplicates, mergeContacts, contactRoleTasks, currentUser } = useApp();
 
   const [activeTab, setActiveTab] = useState<'contacts' | 'organisations'>('contacts');
   const [searchQuery, setSearchQuery] = useState('');

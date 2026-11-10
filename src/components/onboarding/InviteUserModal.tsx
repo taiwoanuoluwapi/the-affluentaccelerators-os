@@ -295,10 +295,19 @@ The Affluentaccelerators Operations Team`;
               {/* Email Preview Card */}
               <div className="border border-slate-200 rounded-xl overflow-hidden bg-slate-50 text-xs">
                 <div className="bg-slate-100 px-3.5 py-2 border-b border-slate-200 flex items-center justify-between font-medium text-slate-600">
-                  <span>Simulated Email Notification Dispatched</span>
-                  <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full">
-                    SMTP Ready
-                  </span>
+                  <div className="flex items-center space-x-2">
+                    <span>Simulated Email Notification Dispatched</span>
+                    <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full">
+                      SMTP Ready
+                    </span>
+                  </div>
+                  <button
+                    onClick={handleCopyEmailText}
+                    className="px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-700 rounded-lg text-[10px] font-bold border border-slate-300 flex items-center space-x-1 cursor-pointer transition-colors"
+                  >
+                    {copiedEmail ? <Check size={12} className="text-emerald-500" /> : <Copy size={12} />}
+                    <span>{copiedEmail ? 'Email Copied!' : 'Copy Formatted Email'}</span>
+                  </button>
                 </div>
                 <div className="p-3.5 space-y-2 bg-white text-slate-700">
                   <div className="text-[11px] text-slate-500">
