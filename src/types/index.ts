@@ -30,6 +30,9 @@ export interface AuthorizedUser {
 }
 
 export type InquiryCategory =
+  | 'One-Time Free Audit'
+  | 'Paid In-Depth Strategy & Review'
+  | 'General Business Inquiry'
   | 'Business Audit Requests'
   | 'Custom Business Consulting'
   | 'Business Advisory'

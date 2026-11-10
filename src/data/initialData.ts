@@ -233,7 +233,7 @@ export const INITIAL_INQUIRIES: Inquiry[] = [
     annualRevenueRange: '₦500M - ₦1.2B',
     currentChallenges: 'Inefficient fleet dispatch operational processes, high fuel leakage, and lack of institutional corporate governance ahead of a Series A debt round.',
     businessObjectives: 'Complete comprehensive business audit, streamline warehouse SOPs, and prepare 3-year strategic growth model.',
-    category: 'Business Audit Requests',
+    category: 'One-Time Free Audit',
     requestedService: 'Full Corporate Diagnostic & Operational Process Overhaul',
     descriptionOfSupport: 'We require an end-to-end operational diagnostic and revenue leak audit across our 3 transit warehouses in Lagos and Rivers State.',
     specificQuestions: 'How fast can Affluentaccelerators deploy an audit team, and do you assist in implementing recommendations?',
