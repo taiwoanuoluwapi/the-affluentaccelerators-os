@@ -166,20 +166,24 @@ export const NewInquiryModal: React.FC<NewInquiryModalProps> = ({ isOpen, onClos
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 border-t border-slate-100">
             <div>
-              <label className="font-semibold text-slate-700 block mb-1">Inquiry Category</label>
+              <label className="font-semibold text-slate-700 block mb-1">Inquiry Intent / Service Desired *</label>
               <select
                 value={category}
-                onChange={e => setCategory(e.target.value as InquiryCategory)}
-                className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-600"
+                onChange={e => {
+                  const val = e.target.value as InquiryCategory;
+                  setCategory(val);
+                  setRequestedService(val);
+                  if (val === 'One-Time Free Audit') {
+                    setBudgetRange('Free (₦0)');
+                  } else if (val === 'Paid In-Depth Strategy & Review') {
+                    setBudgetRange('₦10,000,000 - ₦25,000,000');
+                  }
+                }}
+                className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-600 font-medium"
               >
-                <option value="Business Audit Requests">Business Audit Requests</option>
-                <option value="Custom Business Consulting">Custom Business Consulting</option>
-                <option value="Business Advisory">Business Advisory</option>
-                <option value="Business Strategy Requests">Business Strategy Requests</option>
-                <option value="Business Growth Support">Business Growth Support</option>
-                <option value="Business Development Requests">Business Development Requests</option>
-                <option value="Partnership Inquiries">Partnership Inquiries</option>
-                <option value="General Business Inquiries">General Business Inquiries</option>
+                <option value="One-Time Free Audit">One-Time Free Audit (Free Diagnostic)</option>
+                <option value="Paid In-Depth Strategy & Review">Paid In-Depth Strategy & Review</option>
+                <option value="General Business Inquiry">General Business Inquiry / Partnership</option>
               </select>
             </div>
 
@@ -189,7 +193,7 @@ export const NewInquiryModal: React.FC<NewInquiryModalProps> = ({ isOpen, onClos
                 type="text"
                 value={budgetRange}
                 onChange={e => setBudgetRange(e.target.value)}
-                placeholder="₦10M - ₦15M"
+                placeholder="Free (₦0) or ₦10M - ₦25M"
                 className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-600"
               />
             </div>
@@ -228,17 +232,29 @@ export const NewInquiryModal: React.FC<NewInquiryModalProps> = ({ isOpen, onClos
             </div>
 
             <div>
-              <label className="font-semibold text-slate-700 block mb-1">Assign BD Representative</label>
+              <label className="font-semibold text-slate-700 block mb-1">Assigned BDR / Growth Agent</label>
               <select
                 value={assignedBdId}
                 onChange={e => setAssignedBdId(e.target.value)}
                 className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-600"
               >
-                {users.map(u => (
-                  <option key={u.id} value={u.id}>
-                    {u.name} ({u.role.replace('_', ' ')})
-                  </option>
-                ))}
+                {users.map(u => {
+                  const roleLabel =
+                    u.role === 'bd_manager'
+                      ? 'BDR Manager'
+                      : u.role === 'sales_rep'
+                      ? 'BDR / Sales Agent'
+                      : u.role === 'consultant'
+                      ? 'Lead Consultant'
+                      : u.role === 'super_admin'
+                      ? 'Founder & Super Admin'
+                      : u.role.replace('_', ' ');
+                  return (
+                    <option key={u.id} value={u.id}>
+                      {u.name} — [{roleLabel}]
+                    </option>
+                  );
+                })}
               </select>
             </div>
           </div>
