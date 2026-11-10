@@ -162,9 +162,24 @@ export const InquiriesList: React.FC<InquiriesListProps> = ({
     { id: 'converted', title: 'Converted to Deal', color: 'border-emerald-600' }
   ];
 
-  const consultingCount = inquiries.filter(i => i.category === 'Custom Business Consulting' || i.category === 'Business Strategy Requests').length;
-  const auditCount = inquiries.filter(i => i.category === 'Business Audit Requests').length;
-  const generalCount = inquiries.filter(i => i.category === 'General Business Inquiries' || i.category === 'Partnership Inquiries' || i.category === 'Business Advisory').length;
+  const freeAuditCount = inquiries.filter(
+    i => (i.category as string) === 'One-Time Free Audit' || (i.category as string) === 'Business Audit Requests'
+  ).length;
+  const paidStrategyCount = inquiries.filter(
+    i =>
+      (i.category as string) === 'Paid In-Depth Strategy & Review' ||
+      (i.category as string) === 'Custom Business Consulting' ||
+      (i.category as string) === 'Business Strategy Requests' ||
+      (i.category as string) === 'Business Development Requests' ||
+      (i.category as string) === 'Business Advisory'
+  ).length;
+  const generalCount = inquiries.filter(
+    i =>
+      (i.category as string) === 'General Business Inquiry' ||
+      (i.category as string) === 'General Business Inquiries' ||
+      (i.category as string) === 'Partnership Inquiries' ||
+      (i.category as string) === 'Business Growth Support'
+  ).length;
 
   return (
     <div className="space-y-4">
@@ -283,37 +298,37 @@ export const InquiriesList: React.FC<InquiriesListProps> = ({
                 : 'bg-slate-100 text-slate-600 hover:text-slate-900'
             }`}
           >
-            All Sheets ({inquiries.length})
+            All Inquiries ({inquiries.length})
           </button>
           <button
-            onClick={() => setCategoryFilter('Business Audit Requests')}
+            onClick={() => setCategoryFilter('One-Time Free Audit')}
             className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
-              categoryFilter === 'Business Audit Requests'
+              categoryFilter === 'One-Time Free Audit'
                 ? 'bg-emerald-800 text-white shadow-2xs font-bold'
                 : 'bg-slate-100 text-slate-600 hover:text-slate-900'
             }`}
           >
-            Tab: [Business Audits] ({auditCount})
+            Tab: [One-Time Free Audits] ({freeAuditCount})
           </button>
           <button
-            onClick={() => setCategoryFilter('Custom Business Consulting')}
+            onClick={() => setCategoryFilter('Paid In-Depth Strategy & Review')}
             className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
-              categoryFilter === 'Custom Business Consulting'
+              categoryFilter === 'Paid In-Depth Strategy & Review'
                 ? 'bg-emerald-800 text-white shadow-2xs font-bold'
                 : 'bg-slate-100 text-slate-600 hover:text-slate-900'
             }`}
           >
-            Tab: [Consulting Inquiries] ({consultingCount})
+            Tab: [Paid In-Depth Strategy & Review] ({paidStrategyCount})
           </button>
           <button
-            onClick={() => setCategoryFilter('General Business Inquiries')}
+            onClick={() => setCategoryFilter('General Business Inquiry')}
             className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
-              categoryFilter === 'General Business Inquiries'
+              categoryFilter === 'General Business Inquiry'
                 ? 'bg-emerald-800 text-white shadow-2xs font-bold'
                 : 'bg-slate-100 text-slate-600 hover:text-slate-900'
             }`}
           >
-            Tab: [General Submissions] ({generalCount})
+            Tab: [General Inquiries] ({generalCount})
           </button>
         </div>
 
@@ -349,15 +364,12 @@ export const InquiriesList: React.FC<InquiriesListProps> = ({
           <select
             value={categoryFilter}
             onChange={e => setCategoryFilter(e.target.value)}
-            className="text-xs bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-700 focus:outline-none focus:ring-1 focus:ring-emerald-600"
+            className="text-xs bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-700 focus:outline-none focus:ring-1 focus:ring-emerald-600 font-medium"
           >
-            <option value="all">All Service Categories</option>
-            <option value="Business Audit Requests">Business Audit Requests</option>
-            <option value="Custom Business Consulting">Custom Business Consulting</option>
-            <option value="Business Advisory">Business Advisory</option>
-            <option value="Business Strategy Requests">Business Strategy Requests</option>
-            <option value="Business Growth Support">Business Growth Support</option>
-            <option value="Business Development Requests">Business Development Requests</option>
+            <option value="all">All Inquiry Types</option>
+            <option value="One-Time Free Audit">One-Time Free Audit</option>
+            <option value="Paid In-Depth Strategy & Review">Paid In-Depth Strategy & Review</option>
+            <option value="General Business Inquiry">General Business Inquiry</option>
           </select>
 
           <select
@@ -377,12 +389,25 @@ export const InquiriesList: React.FC<InquiriesListProps> = ({
             onChange={e => setAssignedFilter(e.target.value)}
             className="text-xs bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-700 focus:outline-none focus:ring-1 focus:ring-emerald-600"
           >
-            <option value="all">All Assignees</option>
-            {users.map(u => (
-              <option key={u.id} value={u.id}>
-                {u.name} ({u.role.replace('_', ' ')})
-              </option>
-            ))}
+            <option value="all">All BDRs & Agents</option>
+            {users.map(u => {
+              const roleTag =
+                u.role === 'bd_manager'
+                  ? 'BDR Manager'
+                  : u.role === 'sales_rep'
+                  ? 'BDR / Sales Agent'
+                  : u.role === 'consultant'
+                  ? 'Lead Consultant'
+                  : u.role === 'super_admin'
+                  ? 'Founder'
+                  : u.role.replace('_', ' ');
+              return (
+                <option key={u.id} value={u.id}>
+                  {u.name} — [{roleTag}]
+                </option>
+              );
+            })}
+          </select>
           </select>
         </div>
 
@@ -498,7 +523,17 @@ export const InquiriesList: React.FC<InquiriesListProps> = ({
                         </td>
 
                         <td className="py-3 px-3">
-                          <span className="font-medium text-slate-700 block truncate max-w-[180px]">
+                          <span
+                            className={`inline-block px-2 py-0.5 rounded text-[11px] font-semibold mb-0.5 ${
+                              inq.category === 'One-Time Free Audit' || inq.category.includes('Audit')
+                                ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                                : inq.category === 'Paid In-Depth Strategy & Review' ||
+                                  inq.category.includes('Strategy') ||
+                                  inq.category.includes('Consulting')
+                                ? 'bg-amber-50 text-amber-900 border border-amber-200'
+                                : 'bg-slate-100 text-slate-700 border border-slate-200'
+                            }`}
+                          >
                             {inq.category}
                           </span>
                           <span className="text-[11px] text-slate-400 truncate block max-w-[180px]">
@@ -639,18 +674,30 @@ export const InquiriesList: React.FC<InquiriesListProps> = ({
               Assign all selected inquiries to a designated Business Development Manager or Sales Representative.
             </p>
             <div>
-              <label className="text-xs font-semibold text-slate-700 block mb-1">Select Assignee</label>
+              <label className="text-xs font-semibold text-slate-700 block mb-1">Select BDR / Agent Assignee</label>
               <select
                 value={bulkAssigneeId}
                 onChange={e => setBulkAssigneeId(e.target.value)}
                 className="w-full text-xs p-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-600"
               >
-                <option value="">-- Choose team member --</option>
-                {users.map(u => (
-                  <option key={u.id} value={u.id}>
-                    {u.name} — {u.title} ({u.role})
-                  </option>
-                ))}
+                <option value="">-- Choose BDR / Agent --</option>
+                {users.map(u => {
+                  const roleTag =
+                    u.role === 'bd_manager'
+                      ? 'BDR Manager'
+                      : u.role === 'sales_rep'
+                      ? 'BDR / Sales Agent'
+                      : u.role === 'consultant'
+                      ? 'Lead Consultant'
+                      : u.role === 'super_admin'
+                      ? 'Founder'
+                      : u.role.replace('_', ' ');
+                  return (
+                    <option key={u.id} value={u.id}>
+                      {u.name} — {u.title} [{roleTag}]
+                    </option>
+                  );
+                })}
               </select>
             </div>
             <div className="flex justify-end space-x-2 pt-2">

@@ -301,8 +301,26 @@ export const InquiryDetailModal: React.FC<InquiryDetailModalProps> = ({
                 </h4>
                 <div className="space-y-2.5">
                   <div>
-                    <span className="text-slate-400 text-[10px] block">Service Category</span>
-                    <span className="font-bold text-slate-800 text-sm">{inquiry.category}</span>
+                    <span className="text-slate-400 text-[10px] block mb-1">Inquiry Intent / Service Requested</span>
+                    <div className="flex items-center space-x-2">
+                      <select
+                        value={inquiry.category}
+                        onChange={e => updateInquiry(inquiry.id, { category: e.target.value as any })}
+                        className={`text-xs font-bold px-2.5 py-1 rounded-lg border focus:outline-none focus:ring-1 focus:ring-emerald-600 ${
+                          inquiry.category === 'One-Time Free Audit' || inquiry.category.includes('Audit')
+                            ? 'bg-emerald-50 text-emerald-900 border-emerald-300'
+                            : inquiry.category === 'Paid In-Depth Strategy & Review' ||
+                              inquiry.category.includes('Strategy') ||
+                              inquiry.category.includes('Consulting')
+                            ? 'bg-amber-50 text-amber-900 border-amber-300'
+                            : 'bg-slate-50 text-slate-800 border-slate-300'
+                        }`}
+                      >
+                        <option value="One-Time Free Audit">One-Time Free Audit (Free Diagnostic)</option>
+                        <option value="Paid In-Depth Strategy & Review">Paid In-Depth Strategy & Review</option>
+                        <option value="General Business Inquiry">General Business Inquiry / Partnership</option>
+                      </select>
+                    </div>
                   </div>
                   <div>
                     <span className="text-slate-400 text-[10px] block">Specific Service Requested</span>
