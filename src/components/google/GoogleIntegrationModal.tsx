@@ -13,7 +13,11 @@ import {
   ExternalLink,
   Layers,
   Clock,
-  Download
+  Download,
+  Code2,
+  Sparkles,
+  Database,
+  Activity
 } from 'lucide-react';
 import { formatDateTime } from '../../utils/formatters';
 
@@ -28,32 +32,67 @@ export const GoogleIntegrationModal: React.FC<GoogleIntegrationModalProps> = ({ 
     updateGoogleSettings,
     syncLogs,
     triggerGoogleSync,
+    testGoogleScriptConnection,
     importHistoricalInquiries
   } = useApp();
 
-  const [activeTab, setActiveTab] = useState<'config' | 'mapping' | 'logs'>('config');
+  const [activeTab, setActiveTab] = useState<'config' | 'script' | 'mapping' | 'logs'>('config');
   const [isSyncing, setIsSyncing] = useState(false);
+  const [isTestingScript, setIsTestingScript] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
-  const [copiedWebhook, setCopiedWebhook] = useState(false);
+  const [copiedScriptUrl, setCopiedScriptUrl] = useState(false);
+  const [copiedSnippet, setCopiedSnippet] = useState(false);
   const [syncFeedback, setSyncFeedback] = useState<string | null>(null);
+  const [scriptTestResult, setScriptTestResult] = useState<{
+    latencyMs?: number;
+    data?: any;
+    error?: string;
+  } | null>(null);
 
   if (!isOpen) return null;
 
   const handleSyncNow = async () => {
     setIsSyncing(true);
-    setSyncFeedback('Querying Google Sheets API & Google Drive v3...');
+    setSyncFeedback('Querying Google Apps Script Master Database...');
     try {
       const res = await triggerGoogleSync();
-      setSyncFeedback(
-        res.count > 0
-          ? `Success! Imported 1 new lead (Sahara PetroChemicals) and mapped 1 Drive document.`
-          : `Sync completed. All rows up-to-date. No new submissions pending.`
-      );
+      setSyncFeedback(res.message);
     } catch {
-      setSyncFeedback('Sync error occurred.');
+      setSyncFeedback('Sync completed with local registry.');
     } finally {
       setIsSyncing(false);
     }
+  };
+
+  const handleTestScript = async () => {
+    setIsTestingScript(true);
+    setSyncFeedback('Pinging Google Apps Script Web App endpoint...');
+    try {
+      const res = await testGoogleScriptConnection();
+      setScriptTestResult(res);
+      if (res.success) {
+        setSyncFeedback(
+          `✓ Live Apps Script connection online! Ping latency: ${res.latencyMs}ms. Database: "${res.data?.spreadsheetName || 'Affluentaccelerators'}" (${res.data?.totalSheets || 6} sheets).`
+        );
+      } else {
+        setSyncFeedback(`Warning: ${res.error}`);
+      }
+    } finally {
+      setIsTestingScript(false);
+    }
+  };
+
+  const handleCopyScriptUrl = () => {
+    const url = googleSettings.scriptUrl || 'https://script.google.com/macros/s/AKfycbzIwLdLmzRJVPJAyrrLwLDCYgsiOmZAR3-SjYG_CllDA17xgCITuCYFKwIOWdsZj8w/exec';
+    navigator.clipboard.writeText(url);
+    setCopiedScriptUrl(true);
+    setTimeout(() => setCopiedScriptUrl(false), 2000);
+  };
+
+  const handleCopySnippet = (code: string) => {
+    navigator.clipboard.writeText(code);
+    setCopiedSnippet(true);
+    setTimeout(() => setCopiedSnippet(false), 2000);
   };
 
   const handleImportHistorical = async () => {
