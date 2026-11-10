@@ -19,7 +19,11 @@ import {
   BookOpen,
   Mail,
   ToggleLeft,
-  ToggleRight
+  ToggleRight,
+  Database,
+  Activity,
+  ExternalLink,
+  RefreshCw
 } from 'lucide-react';
 import { formatDateTime, formatDate } from '../../utils/formatters';
 import { UserRole } from '../../types';
@@ -35,11 +39,23 @@ export const SettingsView: React.FC = () => {
     authorizedUsers,
     addAuthorizedUser,
     removeAuthorizedUser,
-    toggleUserActive
+    toggleUserActive,
+    supabaseLiveConnected,
+    supabaseLiveLatency,
+    supabaseProjectRef,
+    testSupabaseHealth,
+    updateSupabaseCredentials,
+    supabaseConfig
   } = useApp();
 
-  const [activeTab, setActiveTab] = useState<'guide' | 'whitelist' | 'branding' | 'roles' | 'audit'>('guide');
+  const [activeTab, setActiveTab] = useState<'database' | 'guide' | 'whitelist' | 'branding' | 'roles' | 'audit'>('database');
   const [auditFilter, setAuditFilter] = useState('all');
+
+  // Supabase form state
+  const [supabaseUrlInput, setSupabaseUrlInput] = useState(supabaseConfig.projectUrl);
+  const [supabaseKeyInput, setSupabaseKeyInput] = useState(supabaseConfig.anonKey);
+  const [pingLoading, setPingLoading] = useState(false);
+  const [pingMessage, setPingMessage] = useState<string | null>(null);
 
   // New whitelist state
   const [newStaffEmail, setNewStaffEmail] = useState('');
