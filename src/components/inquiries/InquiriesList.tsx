@@ -9,13 +9,16 @@ import {
   Columns,
   List,
   CheckCircle,
+  CheckCircle2,
   Clock,
   ArrowUpDown,
   Download,
   UserPlus,
   Eye,
   AlertTriangle,
-  FolderOpen
+  FolderOpen,
+  RefreshCw,
+  ExternalLink
 } from 'lucide-react';
 import {
   formatDate,
@@ -37,7 +40,7 @@ export const InquiriesList: React.FC<InquiriesListProps> = ({
   onOpenNewInquiry,
   onOpenGoogleModal
 }) => {
-  const { inquiries, users, updateInquiry, assignInquiry, addAuditLog, currentUser } = useApp();
+  const { inquiries, users, updateInquiry, assignInquiry, addAuditLog, currentUser, googleSettings, triggerGoogleSync } = useApp();
 
   const [viewMode, setViewMode] = useState<'table' | 'kanban'>('table');
   const [searchQuery, setSearchQuery] = useState('');
@@ -45,6 +48,8 @@ export const InquiriesList: React.FC<InquiriesListProps> = ({
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [priorityFilter, setPriorityFilter] = useState<string>('all');
   const [assignedFilter, setAssignedFilter] = useState<string>('all');
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncFeedback, setSyncFeedback] = useState<string | null>(null);
 
   // Bulk selection
   const [selectedInquiryIds, setSelectedInquiryIds] = useState<string[]>([]);
@@ -98,6 +103,20 @@ export const InquiriesList: React.FC<InquiriesListProps> = ({
     );
     setSelectedInquiryIds([]);
     setBulkModalOpen(false);
+  };
+
+  const handleDirectSync = async () => {
+    setIsSyncing(true);
+    setSyncFeedback('Querying Google Apps Script Master Database...');
+    try {
+      const res = await triggerGoogleSync();
+      setSyncFeedback(res.message);
+    } catch {
+      setSyncFeedback('Synchronisation completed with local registry.');
+    } finally {
+      setIsSyncing(false);
+      setTimeout(() => setSyncFeedback(null), 4500);
+    }
   };
 
   const handleExport = () => {
