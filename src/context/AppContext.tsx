@@ -63,12 +63,19 @@ interface AppContextType {
 
   // Authentication
   isAuthenticated: boolean;
-  login: (email: string, password?: string) => { success: boolean; message?: string };
-  signup: (params: { name: string; email: string; phone?: string; department?: string; password?: string }) => { success: boolean; message: string; requiresApproval?: boolean };
-  logout: () => void;
+  login: (email: string, password?: string) => Promise<{ success: boolean; message?: string }>;
+  signup: (params: { name: string; email: string; phone?: string; department?: string; password?: string }) => Promise<{ success: boolean; message: string; requiresApproval?: boolean }>;
+  logout: () => Promise<void>;
   authorizedUsers: AuthorizedUser[];
   addAuthorizedUser: (email: string, defaultRole: UserRole) => void;
   removeAuthorizedUser: (id: string) => void;
+
+  // Supabase Live Health & Configuration
+  supabaseLiveConnected: boolean;
+  supabaseLiveLatency: number | null;
+  supabaseProjectRef: string;
+  testSupabaseHealth: () => Promise<{ success: boolean; latencyMs: number; message: string; projectRef?: string }>;
+  updateSupabaseCredentials: (url: string, key: string) => Promise<{ success: boolean; message: string }>;
 
   // Mobile layout state
   mobileSidebarOpen: boolean;
@@ -356,6 +363,157 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     supabaseConfig
   ]);
 
+  const [supabaseLiveConnected, setSupabaseLiveConnected] = useState<boolean>(false);
+  const [supabaseLiveLatency, setSupabaseLiveLatency] = useState<number | null>(null);
+  const [supabaseProjectRef, setSupabaseProjectRef] = useState<string>('pactzmpimnaeieijpvdw');
+
+  const testSupabaseHealth = async (): Promise<{
+    success: boolean;
+    latencyMs: number;
+    message: string;
+    projectRef?: string;
+  }> => {
+    const res = await testSupabaseConnection();
+    setSupabaseLiveConnected(res.success);
+    setSupabaseLiveLatency(res.latencyMs);
+    if (res.projectRef) setSupabaseProjectRef(res.projectRef);
+    return res;
+  };
+
+  const updateSupabaseCredentials = async (
+    url: string,
+    key: string
+  ): Promise<{ success: boolean; message: string }> => {
+    resetSupabaseClient(url, key);
+    setSupabaseConfig(prev => ({
+      ...prev,
+      projectUrl: url.trim(),
+      anonKey: key.trim(),
+      connected: true
+    }));
+    const health = await testSupabaseConnection();
+    setSupabaseLiveConnected(health.success);
+    setSupabaseLiveLatency(health.latencyMs);
+    if (health.projectRef) setSupabaseProjectRef(health.projectRef);
+
+    addAuditLog(
+      'Supabase Credentials Updated',
+      'Settings',
+      'supabase_config',
+      `Supabase project set to ${url.trim()} (${health.success ? 'Connected' : 'Connection failed'})`
+    );
+
+    return {
+      success: health.success,
+      message: health.message
+    };
+  };
+
+  // Run ping test on startup
+  useEffect(() => {
+    testSupabaseHealth();
+  }, []);
+
+  // Supabase Auth session listener & auto-profile sync
+  useEffect(() => {
+    let mounted = true;
+
+    const checkSession = async () => {
+      try {
+        if (!isSupabaseConfigured()) return;
+        const supabase = getSupabase();
+        const { data: { session } } = await supabase.auth.getSession();
+
+        if (session?.user && mounted) {
+          const profile = await fetchSupabaseProfile(session.user.id);
+          const email = session.user.email?.toLowerCase() || '';
+          const isFounder = email === 'fulfilmenttaiwo@gmail.com';
+          const resolvedRole: UserRole = profile?.role || (isFounder ? 'super_admin' : 'sales_rep');
+
+          const liveUser: User = {
+            id: session.user.id,
+            name: profile?.name || session.user.user_metadata?.name || email.split('@')[0],
+            email,
+            role: resolvedRole,
+            title: profile?.title || (resolvedRole === 'super_admin' ? 'Founder & CEO' : 'Authorized Specialist'),
+            department: profile?.department || (resolvedRole === 'super_admin' ? 'Executive Leadership' : 'Commercial Growth'),
+            avatar: profile?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+            phone: profile?.phone || session.user.user_metadata?.phone || '+234 800 000 0000',
+            active: profile?.active ?? true,
+            lastLogin: new Date().toISOString(),
+            createdAt: profile?.createdAt || session.user.created_at || new Date().toISOString()
+          };
+
+          if (liveUser.active || isFounder) {
+            setUsers(prev => {
+              const idx = prev.findIndex(u => u.email.toLowerCase() === email || u.id === liveUser.id);
+              if (idx >= 0) {
+                const next = [...prev];
+                next[idx] = { ...next[idx], ...liveUser };
+                return next;
+              }
+              return [liveUser, ...prev];
+            });
+            setCurrentUserId(liveUser.id);
+            setIsAuthenticated(true);
+          }
+        }
+      } catch (err) {
+        console.warn('Initial Supabase session sync warning:', err);
+      }
+    };
+
+    checkSession();
+
+    // Subscribe to auth events (SIGN_IN, SIGN_OUT, TOKEN_REFRESHED)
+    try {
+      const supabase = getSupabase();
+      const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+        if (event === 'SIGNED_IN' && session?.user && mounted) {
+          const profile = await fetchSupabaseProfile(session.user.id);
+          const email = session.user.email?.toLowerCase() || '';
+          const isFounder = email === 'fulfilmenttaiwo@gmail.com';
+          const role: UserRole = profile?.role || (isFounder ? 'super_admin' : 'sales_rep');
+
+          const liveUser: User = {
+            id: session.user.id,
+            name: profile?.name || session.user.user_metadata?.name || email.split('@')[0],
+            email,
+            role,
+            title: profile?.title || (role === 'super_admin' ? 'Founder & CEO' : 'Staff Member'),
+            department: profile?.department || (role === 'super_admin' ? 'Executive Leadership' : 'Operations'),
+            avatar: profile?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+            phone: profile?.phone || '+234 800 000 0000',
+            active: profile?.active ?? true,
+            lastLogin: new Date().toISOString(),
+            createdAt: profile?.createdAt || new Date().toISOString()
+          };
+
+          setUsers(prev => {
+            const idx = prev.findIndex(u => u.email.toLowerCase() === email || u.id === liveUser.id);
+            if (idx >= 0) {
+              const next = [...prev];
+              next[idx] = { ...next[idx], ...liveUser };
+              return next;
+            }
+            return [liveUser, ...prev];
+          });
+          setCurrentUserId(liveUser.id);
+          setIsAuthenticated(true);
+        } else if (event === 'SIGNED_OUT' && mounted) {
+          setIsAuthenticated(false);
+        }
+      });
+
+      return () => {
+        mounted = false;
+        authListener?.subscription.unsubscribe();
+      };
+    } catch (e) {
+      console.warn('Supabase auth listener setup warning:', e);
+    }
+  }, []);
+
   const currentUser = users.find(u => u.id === currentUserId) || users[0];
 
   const switchUser = (userId: string) => {
@@ -367,23 +525,86 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  const login = (email: string, password?: string): { success: boolean; message?: string } => {
+  const login = async (email: string, password?: string): Promise<{ success: boolean; message?: string }> => {
     const cleanEmail = email.trim().toLowerCase();
+
+    // 1. If password provided, attempt live Supabase authentication
+    if (password && isSupabaseConfigured()) {
+      try {
+        const supabase = getSupabase();
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: cleanEmail,
+          password: password
+        });
+
+        if (error) {
+          return { success: false, message: error.message };
+        }
+
+        if (data?.user) {
+          const profile = await fetchSupabaseProfile(data.user.id);
+          const isFounderEmail = cleanEmail === 'fulfilmenttaiwo@gmail.com';
+          const resolvedRole: UserRole = profile?.role || (isFounderEmail ? 'super_admin' : 'sales_rep');
+
+          // Check if user is active
+          if (profile && profile.active === false && !isFounderEmail) {
+            await supabase.auth.signOut();
+            return {
+              success: false,
+              message: 'Your account is pending administrator approval. Please wait for an executive to approve your onboarding request.'
+            };
+          }
+
+          const liveUser: User = {
+            id: data.user.id,
+            name: profile?.name || data.user.user_metadata?.name || cleanEmail.split('@')[0].replace('.', ' '),
+            email: cleanEmail,
+            role: resolvedRole,
+            title: profile?.title || (resolvedRole === 'super_admin' ? 'Founder & CEO' : 'Authorized Specialist'),
+            department: profile?.department || (resolvedRole === 'super_admin' ? 'Executive Leadership' : 'Commercial Growth'),
+            avatar: profile?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+            phone: profile?.phone || data.user.user_metadata?.phone || '+234 800 000 0000',
+            active: true,
+            lastLogin: new Date().toISOString(),
+            createdAt: profile?.createdAt || data.user.created_at || new Date().toISOString()
+          };
+
+          setUsers(prev => {
+            const idx = prev.findIndex(u => u.email.toLowerCase() === cleanEmail || u.id === liveUser.id);
+            if (idx >= 0) {
+              const copy = [...prev];
+              copy[idx] = { ...copy[idx], ...liveUser };
+              return copy;
+            }
+            return [liveUser, ...prev];
+          });
+
+          setCurrentUserId(liveUser.id);
+          setIsAuthenticated(true);
+          addAuditLog('User Login', 'User', liveUser.id, `${liveUser.name} (${liveUser.role}) signed in via Supabase Auth`);
+          return { success: true };
+        }
+      } catch (err: any) {
+        console.warn('Supabase sign-in network error:', err);
+      }
+    }
+
+    // 2. Demo Persona / Quick switch / Whitelist fallback
     const user = users.find(u => u.email.toLowerCase() === cleanEmail);
 
     if (!user) {
       // Check if email is in authorized whitelist
-      const isAuthorized = authorizedUsers.some(a => a.email.toLowerCase() === cleanEmail);
-      if (isAuthorized) {
-        // Create user from whitelist
-        const authRecord = authorizedUsers.find(a => a.email.toLowerCase() === cleanEmail)!;
+      const authRecord = authorizedUsers.find(a => a.email.toLowerCase() === cleanEmail);
+      if (authRecord) {
+        const isFounder = cleanEmail === 'fulfilmenttaiwo@gmail.com' || cleanEmail.includes('founder') || cleanEmail.includes('eze');
+        const role: UserRole = isFounder ? 'super_admin' : authRecord.defaultRole;
         const newUser: User = {
           id: `usr_${Date.now()}`,
           name: cleanEmail.split('@')[0].replace('.', ' '),
           email: cleanEmail,
-          role: authRecord.defaultRole,
-          title: 'Authorized Staff',
-          department: 'Operations',
+          role,
+          title: role === 'super_admin' ? 'Founder & CEO' : 'Authorized Staff',
+          department: role === 'super_admin' ? 'Executive Leadership' : 'Operations',
           avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
           phone: '+234 800 000 0000',
           active: true,
@@ -393,18 +614,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setUsers(prev => [...prev, newUser]);
         setCurrentUserId(newUser.id);
         setIsAuthenticated(true);
+        addAuditLog('User Login Whitelist', 'User', newUser.id, `${newUser.name} created and signed in via Whitelist`);
         return { success: true };
       }
       return {
         success: false,
-        message: 'Account not found. Please contact your AffluentOS administrator or sign up with an authorized company email.'
+        message: 'Account not found. Please sign up or contact your AffluentOS administrator.'
       };
     }
 
     if (!user.active) {
       return {
         success: false,
-        message: 'This account has been deactivated by the system administrator.'
+        message: 'This account has been deactivated or is awaiting administrator approval.'
       };
     }
 
@@ -415,26 +637,92 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return { success: true };
   };
 
-  const signup = (params: {
+  const signup = async (params: {
     name: string;
     email: string;
     phone?: string;
     department?: string;
     password?: string;
-  }): { success: boolean; message: string; requiresApproval?: boolean } => {
+  }): Promise<{ success: boolean; message: string; requiresApproval?: boolean }> => {
     const cleanEmail = params.email.trim().toLowerCase();
 
-    // Check if user already exists
+    // 1. Live Supabase Auth sign-up if configured and password provided
+    if (params.password && isSupabaseConfigured()) {
+      try {
+        const supabase = getSupabase();
+        const { data, error } = await supabase.auth.signUp({
+          email: cleanEmail,
+          password: params.password,
+          options: {
+            data: {
+              name: params.name,
+              phone: params.phone,
+              department: params.department || 'Operations'
+            }
+          }
+        });
+
+        if (error) {
+          return { success: false, message: error.message };
+        }
+
+        const isWhitelisted =
+          cleanEmail === 'fulfilmenttaiwo@gmail.com' ||
+          cleanEmail.endsWith('@affluentaccelerators.com') ||
+          authorizedUsers.some(a => a.email.toLowerCase() === cleanEmail);
+
+        if (isWhitelisted) {
+          const authRecord = authorizedUsers.find(a => a.email.toLowerCase() === cleanEmail);
+          const role: UserRole =
+            cleanEmail === 'fulfilmenttaiwo@gmail.com'
+              ? 'super_admin'
+              : authRecord?.defaultRole || 'sales_rep';
+
+          const newUser: User = {
+            id: data.user?.id || `usr_${Date.now()}`,
+            name: params.name,
+            email: cleanEmail,
+            role,
+            title: role === 'super_admin' ? 'Founder & CEO' : 'Specialist',
+            department: params.department || 'Operations',
+            avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+            phone: params.phone || '+234 800 000 0000',
+            active: true,
+            lastLogin: new Date().toISOString(),
+            createdAt: new Date().toISOString()
+          };
+
+          setUsers(prev => [newUser, ...prev.filter(u => u.email.toLowerCase() !== cleanEmail)]);
+          setCurrentUserId(newUser.id);
+          setIsAuthenticated(true);
+          addAuditLog('User Registered Supabase', 'User', newUser.id, `${newUser.name} created account with role ${newUser.role}`);
+          return {
+            success: true,
+            message: `Account created successfully with ${role.replace('_', ' ').toUpperCase()} privileges! Welcome to AffluentOS.`
+          };
+        } else {
+          // Non-whitelisted: awaiting approval
+          return {
+            success: true,
+            requiresApproval: true,
+            message: 'Your registration was submitted to Supabase! An administrator must approve your account on the Onboarding board before login.'
+          };
+        }
+      } catch (err: any) {
+        console.warn('Supabase sign-up error, falling back to local:', err);
+      }
+    }
+
+    // 2. Fallback local sign up
     if (users.some(u => u.email.toLowerCase() === cleanEmail)) {
       return { success: false, message: 'An account with this email address already exists.' };
     }
 
-    // Check whitelist or @affluentaccelerators.com domain
     const isAffluentDomain = cleanEmail.endsWith('@affluentaccelerators.com');
     const authWhitelist = authorizedUsers.find(a => a.email.toLowerCase() === cleanEmail);
+    const isOwner = cleanEmail === 'fulfilmenttaiwo@gmail.com';
 
-    if (!isAffluentDomain && !authWhitelist) {
-      // Create user but mark as inactive awaiting admin approval
+    if (!isAffluentDomain && !authWhitelist && !isOwner) {
       const pendingUser: User = {
         id: `usr_${Date.now()}`,
         name: params.name,
@@ -453,7 +741,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         'User Signup Pending',
         'User',
         pendingUser.id,
-        `${params.name} (${cleanEmail}) signed up from non-whitelisted email. Awaiting admin approval.`
+        `${params.name} (${cleanEmail}) registered. Awaiting admin approval.`
       );
       return {
         success: true,
@@ -462,14 +750,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       };
     }
 
-    // Whitelisted or company domain: automatically activate with appropriate role
-    const assignedRole: UserRole = authWhitelist?.defaultRole || (cleanEmail.includes('founder') || cleanEmail.includes('eze') ? 'super_admin' : 'sales_rep');
+    const assignedRole: UserRole = isOwner ? 'super_admin' : (authWhitelist?.defaultRole || 'sales_rep');
     const newUser: User = {
       id: `usr_${Date.now()}`,
       name: params.name,
       email: cleanEmail,
       role: assignedRole,
-      title: authWhitelist ? 'Team Member' : 'Commercial Associate',
+      title: isOwner ? 'Founder & CEO' : authWhitelist ? 'Team Member' : 'Commercial Associate',
       department: params.department || 'Commercial Growth',
       avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
       phone: params.phone || '+234 800 000 0000',
@@ -486,7 +773,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return { success: true, message: 'Account created successfully! Welcome to AffluentOS.' };
   };
 
-  const logout = () => {
+  const logout = async (): Promise<void> => {
+    try {
+      if (isSupabaseConfigured()) {
+        const supabase = getSupabase();
+        await supabase.auth.signOut();
+      }
+    } catch (e) {
+      console.warn('Error signing out of Supabase:', e);
+    }
     setIsAuthenticated(false);
     addAuditLog('User Logout', 'User', currentUser.id, `${currentUser.name} signed out`);
   };
@@ -1690,6 +1985,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         authorizedUsers,
         addAuthorizedUser,
         removeAuthorizedUser,
+        supabaseLiveConnected,
+        supabaseLiveLatency,
+        supabaseProjectRef,
+        testSupabaseHealth,
+        updateSupabaseCredentials,
         mobileSidebarOpen,
         setMobileSidebarOpen,
         inquiries,

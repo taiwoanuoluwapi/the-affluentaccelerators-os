@@ -61,9 +61,9 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onCl
     setTimeout(() => setPasswordFeedback(null), 3000);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     onClose();
-    logout();
+    await logout();
   };
 
   return (
