@@ -170,6 +170,19 @@ export const SettingsView: React.FC = () => {
       {/* Tabs */}
       <div className="flex flex-wrap gap-2 text-xs font-semibold">
         <button
+          onClick={() => setActiveTab('database')}
+          className={`px-4 py-2 rounded-xl transition-colors flex items-center space-x-1.5 ${
+            activeTab === 'database'
+              ? 'bg-emerald-700 text-white shadow-xs'
+              : 'bg-white text-slate-600 hover:bg-slate-100'
+          }`}
+        >
+          <Database size={14} />
+          <span>Supabase & Live Database</span>
+          <span className={`w-2 h-2 rounded-full ${supabaseLiveConnected ? 'bg-emerald-400' : 'bg-amber-400'}`} />
+        </button>
+
+        <button
           onClick={() => setActiveTab('guide')}
           className={`px-4 py-2 rounded-xl transition-colors flex items-center space-x-1.5 ${
             activeTab === 'guide'
@@ -227,6 +240,184 @@ export const SettingsView: React.FC = () => {
           <span>Audit Trail</span>
         </button>
       </div>
+
+      {/* TAB 0: SUPABASE & LIVE DATABASE */}
+      {activeTab === 'database' && (
+        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-6 text-xs text-slate-700">
+          <div className="border-b border-slate-100 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <div className="flex items-center space-x-2">
+                <h3 className="font-bold text-sm text-slate-900">Supabase Cloud PostgreSQL & Auth Engine</h3>
+                <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
+                  supabaseLiveConnected
+                    ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
+                    : 'bg-amber-100 text-amber-800 border-amber-300'
+                }`}>
+                  {supabaseLiveConnected ? 'Connected & Verified' : 'Connecting'}
+                </span>
+              </div>
+              <p className="text-slate-400 mt-0.5">
+                Target Project: <code className="font-mono text-emerald-800 font-bold">{supabaseProjectRef}</code> • System of record for users, roles, permissions, and Row Level Security (RLS).
+              </p>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <button
+                type="button"
+                onClick={async () => {
+                  setPingLoading(true);
+                  setPingMessage(null);
+                  try {
+                    const res = await testSupabaseHealth();
+                    setPingMessage(res.message);
+                  } catch (e: any) {
+                    setPingMessage(e?.message || 'Ping failed');
+                  } finally {
+                    setPingLoading(false);
+                  }
+                }}
+                disabled={pingLoading}
+                className="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 font-bold rounded-lg text-xs flex items-center space-x-1.5 cursor-pointer transition-colors"
+              >
+                <Activity size={14} className={pingLoading ? 'animate-spin text-emerald-600' : 'text-emerald-700'} />
+                <span>{pingLoading ? 'Testing...' : 'Ping Supabase API'}</span>
+              </button>
+
+              <a
+                href={`https://supabase.com/dashboard/project/${supabaseProjectRef}/sql/new`}
+                target="_blank"
+                rel="noreferrer"
+                className="px-3 py-1.5 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-lg text-xs flex items-center space-x-1.5 cursor-pointer transition-colors"
+              >
+                <span>Supabase SQL Editor</span>
+                <ExternalLink size={12} />
+              </a>
+            </div>
+          </div>
+
+          {pingMessage && (
+            <div className="p-3 bg-slate-900 text-emerald-400 font-mono text-xs rounded-xl flex items-center justify-between">
+              <span>{pingMessage}</span>
+              {supabaseLiveLatency && <span className="text-slate-400 text-[11px]">{supabaseLiveLatency}ms latency</span>}
+            </div>
+          )}
+
+          {/* Quick Metrics */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
+              <span className="text-[10px] font-bold text-slate-400 uppercase">Founder / Super Admin</span>
+              <div className="font-bold text-slate-900 text-sm">fulfilmenttaiwo@gmail.com</div>
+              <span className="text-[11px] text-emerald-700 font-semibold">Pre-seeded in authorized_staff</span>
+            </div>
+
+            <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
+              <span className="text-[10px] font-bold text-slate-400 uppercase">Auth Provider</span>
+              <div className="font-bold text-slate-900 text-sm">Supabase GoTrue (Email/Password)</div>
+              <span className="text-[11px] text-emerald-700 font-semibold">JWT + Row Level Security</span>
+            </div>
+
+            <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
+              <span className="text-[10px] font-bold text-slate-400 uppercase">Database Architecture</span>
+              <div className="font-bold text-slate-900 text-sm">PostgreSQL 15+</div>
+              <span className="text-[11px] text-emerald-700 font-semibold">5 System Tables + RLS Policies</span>
+            </div>
+          </div>
+
+          {/* Connection Configuration Form */}
+          <form
+            onSubmit={async e => {
+              e.preventDefault();
+              setPingLoading(true);
+              setPingMessage(null);
+              try {
+                const res = await updateSupabaseCredentials(supabaseUrlInput, supabaseKeyInput);
+                setPingMessage(res.message);
+              } catch (err: any) {
+                setPingMessage(err?.message || 'Error updating credentials');
+              } finally {
+                setPingLoading(false);
+              }
+            }}
+            className="p-5 bg-slate-50 rounded-xl border border-slate-200 space-y-4"
+          >
+            <h4 className="font-bold text-xs text-slate-800 flex items-center space-x-1.5">
+              <Settings size={14} className="text-emerald-700" />
+              <span>Project Endpoint & Credentials</span>
+            </h4>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="font-semibold text-slate-600 block mb-1">Supabase Project URL</label>
+                <input
+                  type="text"
+                  required
+                  value={supabaseUrlInput}
+                  onChange={e => setSupabaseUrlInput(e.target.value)}
+                  className="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-xs font-mono text-slate-800"
+                />
+              </div>
+
+              <div>
+                <label className="font-semibold text-slate-600 block mb-1">Publishable Key (Client API Key)</label>
+                <input
+                  type="text"
+                  required
+                  value={supabaseKeyInput}
+                  onChange={e => setSupabaseKeyInput(e.target.value)}
+                  className="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-xs font-mono text-slate-800"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between pt-1">
+              <span className="text-[11px] text-slate-500">
+                Changes persist across sessions in local storage and environment configuration.
+              </span>
+              <button
+                type="submit"
+                disabled={pingLoading}
+                className="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-lg text-xs transition-colors cursor-pointer"
+              >
+                Save & Reconnect Supabase
+              </button>
+            </div>
+          </form>
+
+          {/* Quick Links & Resources */}
+          <div className="p-4 bg-emerald-50/60 border border-emerald-200 rounded-xl space-y-2 text-emerald-950">
+            <h4 className="font-bold text-xs">Direct Supabase Dashboard Shortcuts</h4>
+            <div className="flex flex-wrap gap-3 pt-1">
+              <a
+                href={`https://supabase.com/dashboard/project/${supabaseProjectRef}/editor`}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center space-x-1 text-xs font-semibold text-emerald-800 hover:underline"
+              >
+                <span>Table Editor</span>
+                <ExternalLink size={12} />
+              </a>
+              <a
+                href={`https://supabase.com/dashboard/project/${supabaseProjectRef}/auth/users`}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center space-x-1 text-xs font-semibold text-emerald-800 hover:underline"
+              >
+                <span>Auth Users & Sessions</span>
+                <ExternalLink size={12} />
+              </a>
+              <a
+                href={`https://supabase.com/dashboard/project/${supabaseProjectRef}/settings/api`}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center space-x-1 text-xs font-semibold text-emerald-800 hover:underline"
+              >
+                <span>API Settings & Keys</span>
+                <ExternalLink size={12} />
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* TAB 1: PRODUCTION DEPLOYMENT GUIDE */}
       {activeTab === 'guide' && <ProductionGuideView />}
