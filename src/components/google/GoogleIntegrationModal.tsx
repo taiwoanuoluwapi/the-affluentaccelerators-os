@@ -56,7 +56,7 @@ export const GoogleIntegrationModal: React.FC<GoogleIntegrationModalProps> = ({ 
     setSyncFeedback('Querying Google Apps Script Master Database...');
     try {
       const res = await triggerGoogleSync();
-      setSyncFeedback(res.message);
+      setSyncFeedback(res.message || 'Sync completed.');
     } catch {
       setSyncFeedback('Sync completed with local registry.');
     } finally {
@@ -106,12 +106,6 @@ export const GoogleIntegrationModal: React.FC<GoogleIntegrationModalProps> = ({ 
     } finally {
       setIsImporting(false);
     }
-  };
-
-  const copyWebhook = () => {
-    navigator.clipboard.writeText('https://api.affluentaccelerators.com/v1/integrations/google-sheets/webhook');
-    setCopiedWebhook(true);
-    setTimeout(() => setCopiedWebhook(false), 2000);
   };
 
   return (

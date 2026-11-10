@@ -110,7 +110,7 @@ export const InquiriesList: React.FC<InquiriesListProps> = ({
     setSyncFeedback('Querying Google Apps Script Master Database...');
     try {
       const res = await triggerGoogleSync();
-      setSyncFeedback(res.message);
+      setSyncFeedback(res.message || 'Synchronisation completed.');
     } catch {
       setSyncFeedback('Synchronisation completed with local registry.');
     } finally {
