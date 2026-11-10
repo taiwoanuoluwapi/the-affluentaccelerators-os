@@ -108,7 +108,8 @@ interface AppContextType {
   googleSettings: GoogleIntegrationSettings;
   updateGoogleSettings: (settings: Partial<GoogleIntegrationSettings>) => void;
   syncLogs: SyncLog[];
-  triggerGoogleSync: () => Promise<{ success: boolean; count: number }>;
+  triggerGoogleSync: () => Promise<{ success: boolean; count: number; message?: string }>;
+  testGoogleScriptConnection: () => Promise<{ success: boolean; data?: any; latencyMs: number; error?: string }>;
   importHistoricalInquiries: () => Promise<number>;
 
   // User Onboarding & Email Invitations
