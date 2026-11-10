@@ -127,6 +127,8 @@ interface AppContextType {
     password?: string;
   }) => Promise<OnboardingSubmission>;
   toggleOnboardingApproval: (submissionId: string, newStatus: ApprovalStatus, notes?: string) => Promise<void>;
+  approvePendingUser: (submissionId: string) => Promise<void>;
+  batchApprovePendingUsers: () => Promise<number>;
   simulateSheetApprovalWebhook: (rowIndex: number, status: 'approved' | 'unapproved') => Promise<void>;
   triggerSheetsOnboardingSync: () => Promise<{ success: boolean; message: string }>;
 
