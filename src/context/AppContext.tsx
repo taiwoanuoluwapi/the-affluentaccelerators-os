@@ -1314,6 +1314,39 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       submission.id,
       `Changed approval status of ${submission.fullName} (${submission.email}) to "${newStatus}" on Google Sheet Row #${submission.googleSheetRowIndex}`
     );
+
+    const approvalNotif: Notification = {
+      id: `notif_${Date.now()}`,
+      userId: currentUser.id,
+      title: isNowApproved ? 'Team Member Approved & Activated' : 'User Account Marked Inactive',
+      message: isNowApproved
+        ? `${submission.fullName} (${submission.requestedRole.replace('_', ' ')}) has been approved. Supabase Auth account is active and role-based tasks are assigned.`
+        : `${submission.fullName}'s account access has been revoked (unapproved).`,
+      type: 'system',
+      read: false,
+      createdAt: new Date().toISOString()
+    };
+    setNotifications(prev => [approvalNotif, ...prev]);
+  };
+
+  const approvePendingUser = async (submissionId: string): Promise<void> => {
+    await toggleOnboardingApproval(
+      submissionId,
+      'approved',
+      `Approved directly by ${currentUser.name} via One-Click Approval`
+    );
+  };
+
+  const batchApprovePendingUsers = async (): Promise<number> => {
+    const pending = onboardingSubmissions.filter(s => s.approvalStatus === 'unapproved');
+    for (const sub of pending) {
+      await toggleOnboardingApproval(
+        sub.id,
+        'approved',
+        `Batch approved by ${currentUser.name}`
+      );
+    }
+    return pending.length;
   };
 
   const simulateSheetApprovalWebhook = async (
@@ -1505,6 +1538,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         inviteUserByEmail,
         submitOnboardingForm,
         toggleOnboardingApproval,
+        approvePendingUser,
+        batchApprovePendingUsers,
         simulateSheetApprovalWebhook,
         triggerSheetsOnboardingSync,
         contactRoleTasks,

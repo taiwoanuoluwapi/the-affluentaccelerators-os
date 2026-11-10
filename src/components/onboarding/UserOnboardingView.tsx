@@ -22,7 +22,12 @@ import {
   Sliders,
   Send,
   Eye,
-  CheckSquare
+  CheckSquare,
+  CheckCheck,
+  Search,
+  UserCheck,
+  XCircle,
+  Filter
 } from 'lucide-react';
 import { formatDate, formatDateTime } from '../../utils/formatters';
 import { InviteUserModal } from './InviteUserModal';
@@ -33,6 +38,8 @@ export const UserOnboardingView: React.FC = () => {
     onboardingSubmissions,
     userInvitations,
     toggleOnboardingApproval,
+    approvePendingUser,
+    batchApprovePendingUsers,
     simulateSheetApprovalWebhook,
     triggerSheetsOnboardingSync,
     googleSettings,
@@ -42,12 +49,14 @@ export const UserOnboardingView: React.FC = () => {
   } = useApp();
 
   const [activeTab, setActiveTab] = useState<'queue' | 'invitations' | 'strategy' | 'code'>('queue');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'unapproved' | 'approved'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [isOnboardingModalOpen, setIsOnboardingModalOpen] = useState(false);
   const [selectedSubmission, setSelectedSubmission] = useState<OnboardingSubmission | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [approvingId, setApprovingId] = useState<string | null>(null);
+  const [isBatchApproving, setIsBatchApproving] = useState(false);
   const [syncFeedback, setSyncFeedback] = useState<string | null>(null);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
 
@@ -66,9 +75,44 @@ export const UserOnboardingView: React.FC = () => {
   const unapprovedCount = onboardingSubmissions.filter(s => s.approvalStatus === 'unapproved').length;
   const approvedCount = onboardingSubmissions.filter(s => s.approvalStatus === 'approved').length;
 
+  const handleApproveUser = async (submission: OnboardingSubmission) => {
+    setApprovingId(submission.id);
+    try {
+      await approvePendingUser(submission.id);
+      setSyncFeedback(
+        `✓ Candidate "${submission.fullName}" approved! Supabase Auth profile is active and starter tasks are provisioned.`
+      );
+    } finally {
+      setApprovingId(null);
+      setTimeout(() => setSyncFeedback(null), 4000);
+    }
+  };
+
+  const handleBatchApprove = async () => {
+    if (!window.confirm(`Approve all ${unapprovedCount} pending candidate(s)? This will activate their accounts in Supabase and sync status to Google Sheets.`)) {
+      return;
+    }
+    setIsBatchApproving(true);
+    try {
+      const count = await batchApprovePendingUsers();
+      setSyncFeedback(
+        `✓ Successfully approved ${count} pending candidate(s)! All accounts are active in Supabase and synced with Google Sheets.`
+      );
+    } finally {
+      setIsBatchApproving(false);
+      setTimeout(() => setSyncFeedback(null), 4000);
+    }
+  };
+
   const handleToggleStatus = async (submission: OnboardingSubmission) => {
     const nextStatus: ApprovalStatus = submission.approvalStatus === 'approved' ? 'unapproved' : 'approved';
     await toggleOnboardingApproval(submission.id, nextStatus);
+    setSyncFeedback(
+      nextStatus === 'approved'
+        ? `✓ User "${submission.fullName}" approved and activated.`
+        : `✓ User "${submission.fullName}" status set to unapproved (inactive).`
+    );
+    setTimeout(() => setSyncFeedback(null), 3500);
   };
 
   const handleSimulateWebhook = async (submission: OnboardingSubmission) => {
