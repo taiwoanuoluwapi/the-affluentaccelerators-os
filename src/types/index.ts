@@ -397,6 +397,11 @@ export interface GoogleIntegrationSettings {
   googleAccount: string;
   spreadsheetId: string;
   spreadsheetName: string;
+  spreadsheetUrl?: string;
+  scriptUrl?: string;
+  totalSheets?: number;
+  allSheets?: string[];
+  totalRegistrations?: number;
   sheetName: string;
   onboardingSheetName: string;
   tasksSheetName: string;
