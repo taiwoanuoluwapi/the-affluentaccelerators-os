@@ -1432,8 +1432,8 @@ export const INITIAL_GOOGLE_SETTINGS: GoogleIntegrationSettings = {
 
 export const INITIAL_SUPABASE_CONFIG: SupabaseConfig = {
   connected: true,
-  projectUrl: 'https://vkwubtxvqlmnoyz.supabase.co',
-  anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZrd3VidHh2cWxtbm95eiIsInJvbGUiOiJhbm9uIiwiaWF0IjoxNzM4ODAwMDAwLCJleHAiOjIwNTQxNjAwMDB9.s_AFFLUENT_SECURE_TOKEN_2026',
+  projectUrl: 'https://pactzmpimnaeieijpvdw.supabase.co',
+  anonKey: 'sb_publishable_pA9shxrcAhu7lKZnvf16iw_D7oJuwna',
   authMethod: 'email_password',
   rlsEnforced: true,
   tables: {
