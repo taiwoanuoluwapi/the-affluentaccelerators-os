@@ -577,7 +577,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     // Asynchronously dispatch to Google Apps Script Master Database
     const scriptUrl = googleSettings.scriptUrl || INITIAL_GOOGLE_SETTINGS.scriptUrl;
-    if (scriptUrl && typeof window !== 'undefined' && window.fetch) {
+    if (scriptUrl && typeof window !== 'undefined' && typeof window.fetch === 'function') {
       try {
         fetch(scriptUrl, {
           method: 'POST',
@@ -1028,7 +1028,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const scriptUrl = googleSettings.scriptUrl || INITIAL_GOOGLE_SETTINGS.scriptUrl;
     let remoteData: any = null;
 
-    if (scriptUrl && typeof window !== 'undefined' && window.fetch) {
+    if (scriptUrl && typeof window !== 'undefined' && typeof window.fetch === 'function') {
       try {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 6000);
