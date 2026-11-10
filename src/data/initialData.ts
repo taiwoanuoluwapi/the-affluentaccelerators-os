@@ -22,11 +22,24 @@ import {
 
 export const INITIAL_USERS: User[] = [
   {
+    id: 'usr_owner_taiwo',
+    name: 'Taiwo Anuoluwapo',
+    email: 'fulfilmenttaiwo@gmail.com',
+    role: 'super_admin',
+    title: 'Founder & CEO',
+    department: 'Executive Leadership',
+    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+    phone: '+234 800 000 0001',
+    active: true,
+    lastLogin: '2026-11-10T15:00:00Z',
+    createdAt: '2025-01-01T08:00:00Z'
+  },
+  {
     id: 'usr_founder',
     name: 'Dr. Chukwuma Eze',
     email: 'c.eze@affluentaccelerators.com',
     role: 'super_admin',
-    title: 'Founder & Managing Partner',
+    title: 'Managing Partner & Co-Founder',
     department: 'Executive Leadership',
     avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
     phone: '+234 803 555 0192',
@@ -115,6 +128,14 @@ export const INITIAL_USERS: User[] = [
 ];
 
 export const INITIAL_AUTHORIZED_USERS: AuthorizedUser[] = [
+  {
+    id: 'auth_owner',
+    email: 'fulfilmenttaiwo@gmail.com',
+    defaultRole: 'super_admin',
+    invitedBy: 'Founder & System Owner',
+    invitedAt: '2025-01-01T08:00:00Z',
+    status: 'active'
+  },
   {
     id: 'auth_1',
     email: 'c.eze@affluentaccelerators.com',
