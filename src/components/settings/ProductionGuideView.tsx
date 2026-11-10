@@ -59,7 +59,7 @@ function onFormSubmitTrigger(e) {
       teamSize: row[11] || "10-50",
       annualRevenueRange: row[12] || "₦100M - ₦500M",
       currentChallenges: row[13] || "",
-      category: row[14] || "Business Audit Requests",
+      category: row[14] || "One-Time Free Audit",
       requestedService: row[15] || "Executive Consulting",
       expectedOutcomes: row[16] || "",
       budgetRange: row[17] || "₦10,000,000 - ₦20,000,000",
