@@ -34,6 +34,7 @@ export const InviteUserModal: React.FC<InviteUserModalProps> = ({
   const [isGenerated, setIsGenerated] = useState(false);
   const [generatedInviteUrl, setGeneratedInviteUrl] = useState('');
   const [copied, setCopied] = useState(false);
+  const [copiedEmail, setCopiedEmail] = useState(false);
   const [emailSentNotice, setEmailSentNotice] = useState(false);
 
   if (!isOpen) return null;
@@ -52,6 +53,26 @@ export const InviteUserModal: React.FC<InviteUserModalProps> = ({
     navigator.clipboard.writeText(generatedInviteUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleCopyEmailText = () => {
+    const emailText = `Subject: Invitation to join AffluentOS Operations & Client CRM
+
+Hello,
+
+You have been invited to join the internal operations platform at The Affluentaccelerators as ${role.toUpperCase()} (${department}).
+
+${customNotes ? `Note from partner: "${customNotes}"\n\n` : ''}Please click the secure link below to complete your onboarding profile:
+${generatedInviteUrl}
+
+Once submitted, your profile is routed to the central Google Sheets queue for administrative approval, which immediately activates your Supabase account.
+
+Warm regards,
+The Affluentaccelerators Operations Team`;
+
+    navigator.clipboard.writeText(emailText);
+    setCopiedEmail(true);
+    setTimeout(() => setCopiedEmail(false), 2000);
   };
 
   const handleReset = () => {
