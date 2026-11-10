@@ -46,7 +46,7 @@ export const InquiryDetailModal: React.FC<InquiryDetailModalProps> = ({
   onConvertToDeal,
   onScheduleFollowUp
 }) => {
-  const { inquiries, users, updateInquiry, assignInquiry, logActivity, activities, auditLogs, currentUser } = useApp();
+  const { inquiries, users, updateInquiry, assignInquiry, logActivity, activities, auditLogs, currentUser, googleSettings } = useApp();
 
   const [activeTab, setActiveTab] = useState<'overview' | 'business' | 'documents' | 'activities' | 'notes' | 'audit'>('overview');
   const [newNote, setNewNote] = useState('');
@@ -327,6 +327,54 @@ export const InquiryDetailModal: React.FC<InquiryDetailModalProps> = ({
                       <span className="text-slate-400 text-[10px] block">Submission Date</span>
                       <span className="font-medium text-slate-700">{formatDateTime(inquiry.submittedAt)}</span>
                     </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Google Sheets Live Record Card */}
+              <div className="md:col-span-2 bg-gradient-to-r from-emerald-50/80 to-slate-50 p-4 rounded-2xl border border-emerald-200/90 shadow-2xs space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <FileSpreadsheet size={16} className="text-emerald-700" />
+                    <span className="font-bold text-xs text-slate-800">
+                      Google Sheets Master Unified Database Record
+                    </span>
+                  </div>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
+                    Synced with Apps Script
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs pt-1">
+                  <div>
+                    <span className="text-[10px] text-slate-400 block uppercase font-bold">Spreadsheet</span>
+                    <span className="font-semibold text-slate-800 truncate block">
+                      {googleSettings.spreadsheetName}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-slate-400 block uppercase font-bold">Sheet Tab</span>
+                    <span className="font-mono font-bold text-emerald-800 block">
+                      [{inquiry.googleSheetName || 'Consulting Inquiries'}]
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-slate-400 block uppercase font-bold">Google Reference ID</span>
+                    <span className="font-mono font-bold text-slate-900 block">
+                      {inquiry.googleReferenceId || inquiry.referenceNo}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-slate-400 block uppercase font-bold">Direct Spreadsheet</span>
+                    <a
+                      href={googleSettings.spreadsheetUrl || 'https://docs.google.com/spreadsheets/d/14F30s9WoA2dLDBttEv2jgm3VnPmUJ6xQHT00FIa3-K8/edit'}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-emerald-700 font-bold hover:underline inline-flex items-center space-x-1"
+                    >
+                      <span>Open in Sheets</span>
+                      <ExternalLink size={11} />
+                    </a>
                   </div>
                 </div>
               </div>

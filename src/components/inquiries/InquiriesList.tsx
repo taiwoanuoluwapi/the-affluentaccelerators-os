@@ -459,8 +459,21 @@ export const InquiriesList: React.FC<InquiriesListProps> = ({
                           />
                         </td>
 
-                        <td className="py-3 px-3 font-mono font-bold text-emerald-900 whitespace-nowrap">
-                          {inq.referenceNo}
+                        <td className="py-3 px-3 whitespace-nowrap">
+                          <div className="font-mono font-bold text-slate-900">
+                            {inq.referenceNo}
+                          </div>
+                          {inq.googleReferenceId && (
+                            <div className="text-[10px] font-mono font-bold text-emerald-800 flex items-center space-x-1 mt-0.5">
+                              <FileSpreadsheet size={11} className="text-emerald-600 shrink-0" />
+                              <span>{inq.googleReferenceId}</span>
+                            </div>
+                          )}
+                          {inq.googleSheetName && (
+                            <span className="inline-block text-[9px] font-semibold bg-emerald-50 text-emerald-900 border border-emerald-200 px-1 rounded mt-0.5">
+                              {inq.googleSheetName}
+                            </span>
+                          )}
                         </td>
 
                         <td className="py-3 px-3">
@@ -570,7 +583,14 @@ export const InquiriesList: React.FC<InquiriesListProps> = ({
                         className="bg-white p-3 rounded-xl border border-slate-200 shadow-xs hover:border-emerald-400 cursor-pointer transition-all hover:shadow-card group"
                       >
                         <div className="flex items-center justify-between mb-1">
-                          <span className="font-mono text-[10px] font-bold text-emerald-800">{inq.referenceNo}</span>
+                          <div className="flex items-center space-x-1">
+                            <span className="font-mono text-[10px] font-bold text-slate-900">{inq.referenceNo}</span>
+                            {inq.googleReferenceId && (
+                              <span className="text-[9px] font-mono font-bold text-emerald-800 bg-emerald-50 px-1 rounded border border-emerald-200">
+                                {inq.googleReferenceId}
+                              </span>
+                            )}
+                          </div>
                           <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${priorityConfig.color}`}>
                             {inq.priority}
                           </span>
