@@ -86,90 +86,171 @@ function onFormSubmitTrigger(e) {
 }`;
 
   const supabaseSqlSchema = `-- AFFLUENTOS PRODUCTION SUPABASE SCHEMA & RLS
--- Run this in Supabase SQL Editor: https://app.supabase.com/project/_/sql
+-- Target Project: pactzmpimnaeieijpvdw
+-- Run in Supabase SQL Editor: https://supabase.com/dashboard/project/pactzmpimnaeieijpvdw/sql/new
 
 -- 1. Create Enums
-CREATE TYPE user_role AS ENUM (
-  'super_admin',
-  'admin',
-  'bd_manager',
-  'sales_rep',
-  'consultant',
-  'intern'
-);
+DO $$ BEGIN
+  CREATE TYPE user_role AS ENUM (
+    'super_admin',
+    'admin',
+    'bd_manager',
+    'sales_rep',
+    'consultant',
+    'intern'
+  );
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
 -- 2. Create Authorized Staff Whitelist Table
-CREATE TABLE public.authorized_staff (
+CREATE TABLE IF NOT EXISTS public.authorized_staff (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   email TEXT UNIQUE NOT NULL,
   default_role user_role NOT NULL DEFAULT 'sales_rep',
-  invited_by TEXT NOT NULL,
+  invited_by TEXT NOT NULL DEFAULT 'Founder Genesis',
   invited_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   is_active BOOLEAN NOT NULL DEFAULT TRUE
 );
 
--- Whitelist Initial Founders & Leadership
+-- Pre-seed Whitelist: Founder + Executive Leadership
 INSERT INTO public.authorized_staff (email, default_role, invited_by)
 VALUES 
+  ('fulfilmenttaiwo@gmail.com', 'super_admin', 'Founder & System Owner'),
   ('c.eze@affluentaccelerators.com', 'super_admin', 'System Genesis'),
   ('a.bello@affluentaccelerators.com', 'admin', 'Dr. Chukwuma Eze'),
   ('t.adeyemi@affluentaccelerators.com', 'bd_manager', 'Amina Bello'),
   ('c.okafor@affluentaccelerators.com', 'sales_rep', 'Tunde Adeyemi'),
   ('d.adeleke@affluentaccelerators.com', 'consultant', 'Dr. Chukwuma Eze'),
   ('n.nwosu@affluentaccelerators.com', 'consultant', 'Amina Bello'),
-  ('f.alabi@affluentaccelerators.com', 'intern', 'Amina Bello');
+  ('f.alabi@affluentaccelerators.com', 'intern', 'Amina Bello')
+ON CONFLICT (email) DO UPDATE 
+SET default_role = EXCLUDED.default_role;
 
 -- 3. Profiles Table (Extends Supabase auth.users)
-CREATE TABLE public.profiles (
+CREATE TABLE IF NOT EXISTS public.profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
   email TEXT UNIQUE NOT NULL,
   role user_role NOT NULL DEFAULT 'sales_rep',
-  title TEXT,
-  department TEXT,
+  title TEXT DEFAULT 'Specialist',
+  department TEXT DEFAULT 'Operations',
   phone TEXT,
   avatar_url TEXT,
-  is_active BOOLEAN NOT NULL DEFAULT TRUE,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  active BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 -- 4. Automatic Whitelist Trigger on Signup
--- Rejects signups if email is not in authorized_staff OR @affluentaccelerators.com!
 CREATE OR REPLACE FUNCTION public.handle_new_staff_signup()
 RETURNS TRIGGER AS $$
 DECLARE
-  staff_role user_role;
+  assigned_role user_role;
+  is_whitelisted BOOLEAN := FALSE;
 BEGIN
   -- Check whitelist
-  SELECT default_role INTO staff_role 
-  FROM public.authorized_staff 
+  SELECT default_role INTO assigned_role
+  FROM public.authorized_staff
   WHERE LOWER(email) = LOWER(NEW.email) AND is_active = TRUE;
 
-  IF staff_role IS NULL AND NOT (NEW.email ILIKE '%@affluentaccelerators.com') THEN
-    RAISE EXCEPTION 'Access Denied: % is not on The Affluentaccelerators authorized staff list.', NEW.email;
+  IF assigned_role IS NOT NULL THEN
+    is_whitelisted := TRUE;
+  ELSIF (NEW.email ILIKE '%@affluentaccelerators.com') THEN
+    assigned_role := 'sales_rep'::user_role;
+    is_whitelisted := TRUE;
+  ELSE
+    assigned_role := 'intern'::user_role;
+    is_whitelisted := FALSE;
   END IF;
 
-  INSERT INTO public.profiles (id, name, email, role, is_active)
+  INSERT INTO public.profiles (id, name, email, role, phone, active)
   VALUES (
     NEW.id,
-    COALESCE(NEW.raw_user_meta_data->>'full_name', split_part(NEW.email, '@', 1)),
+    COALESCE(NEW.raw_user_meta_data->>'name', split_part(NEW.email, '@', 1)),
     NEW.email,
-    COALESCE(staff_role, 'sales_rep'::user_role),
-    TRUE
-  );
+    assigned_role,
+    NEW.raw_user_meta_data->>'phone',
+    is_whitelisted
+  )
+  ON CONFLICT (id) DO UPDATE 
+  SET 
+    role = EXCLUDED.role,
+    active = EXCLUDED.active;
 
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE PROCEDURE public.handle_new_staff_signup();
 
--- 5. Row Level Security Policies
-ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+-- 5. Additional Operational Tables
+CREATE TABLE IF NOT EXISTS public.user_onboarding_requests (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  full_name TEXT NOT NULL,
+  email TEXT NOT NULL,
+  phone TEXT,
+  requested_role user_role NOT NULL DEFAULT 'sales_rep',
+  department TEXT DEFAULT 'Commercial Growth',
+  bio TEXT,
+  approval_status TEXT NOT NULL DEFAULT 'unapproved',
+  sheet_tab_name TEXT DEFAULT 'User Onboarding & Approvals',
+  sheet_row_index INT,
+  invited_by TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  approved_at TIMESTAMPTZ
+);
 
-CREATE POLICY "Super Admins can access all profiles"
+CREATE TABLE IF NOT EXISTS public.crm_contacts (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  full_name TEXT NOT NULL,
+  business_name TEXT NOT NULL,
+  email TEXT NOT NULL,
+  phone TEXT,
+  contact_type TEXT NOT NULL DEFAULT 'lead',
+  relationship_owner_id UUID REFERENCES public.profiles(id),
+  sheet_row_index INT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.contact_role_tasks (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  contact_id UUID REFERENCES public.crm_contacts(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  description TEXT,
+  assigned_role user_role NOT NULL,
+  assigned_user_id UUID REFERENCES public.profiles(id),
+  due_date DATE NOT NULL,
+  priority TEXT NOT NULL DEFAULT 'medium',
+  status TEXT NOT NULL DEFAULT 'todo',
+  sheet_row_index INT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 6. Row Level Security Policies
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.authorized_staff ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.user_onboarding_requests ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.crm_contacts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.contact_role_tasks ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Public profiles read for authenticated" ON public.profiles;
+CREATE POLICY "Public profiles read for authenticated"
+  ON public.profiles FOR SELECT
+  TO authenticated
+  USING (true);
+
+DROP POLICY IF EXISTS "Users can update own profile" ON public.profiles;
+CREATE POLICY "Users can update own profile"
+  ON public.profiles FOR UPDATE
+  TO authenticated
+  USING (id = auth.uid());
+
+DROP POLICY IF EXISTS "Admins can manage all profiles" ON public.profiles;
+CREATE POLICY "Admins can manage all profiles"
   ON public.profiles FOR ALL
   TO authenticated
   USING (
@@ -179,10 +260,16 @@ CREATE POLICY "Super Admins can access all profiles"
     )
   );
 
-CREATE POLICY "Users can read and update their own profile"
-  ON public.profiles FOR SELECT
+DROP POLICY IF EXISTS "Admins can manage whitelist" ON public.authorized_staff;
+CREATE POLICY "Admins can manage whitelist"
+  ON public.authorized_staff FOR ALL
   TO authenticated
-  USING (id = auth.uid());`;
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.profiles 
+      WHERE id = auth.uid() AND role IN ('super_admin', 'admin')
+    )
+  );`;
 
   const copyAppsScript = () => {
     navigator.clipboard.writeText(appsScriptCode);
