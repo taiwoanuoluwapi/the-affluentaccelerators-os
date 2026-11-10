@@ -116,6 +116,9 @@ export interface Inquiry {
 
   // Google Sheets metadata
   googleSheetRowIndex?: number;
+  googleReferenceId?: string;
+  googleSheetName?: string;
+  syncedToGoogleSheet?: boolean;
   syncedAt?: string;
 }
 
