@@ -403,22 +403,22 @@ export const InquiryDetailModal: React.FC<InquiryDetailModalProps> = ({
                   Internal Team Assignments
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  {/* BD Manager */}
+                  {/* BDR Manager / Agent */}
                   <div>
                     <label className="text-[11px] font-bold text-slate-600 block mb-1">
-                      Assigned BD Manager
+                      Assigned BDR Manager / Agent
                     </label>
                     <select
                       value={inquiry.assignedBdId || ''}
                       onChange={e => assignInquiry(inquiry.id, { bdId: e.target.value })}
                       className="w-full text-xs p-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-600"
                     >
-                      <option value="">-- Select BD Manager --</option>
+                      <option value="">-- Select BDR / Agent --</option>
                       {users
-                        .filter(u => u.role === 'bd_manager' || u.role === 'super_admin')
+                        .filter(u => u.role === 'bd_manager' || u.role === 'sales_rep' || u.role === 'super_admin')
                         .map(u => (
                           <option key={u.id} value={u.id}>
-                            {u.name} ({u.role.replace('_', ' ')})
+                            {u.name} [{u.role === 'bd_manager' ? 'BDR Manager' : u.role === 'sales_rep' ? 'Sales Agent' : 'Founder'}]
                           </option>
                         ))}
                     </select>
@@ -436,10 +436,10 @@ export const InquiryDetailModal: React.FC<InquiryDetailModalProps> = ({
                     >
                       <option value="">-- Select Sales Rep --</option>
                       {users
-                        .filter(u => u.role === 'sales_rep' || u.role === 'bd_manager')
+                        .filter(u => u.role === 'sales_rep' || u.role === 'bd_manager' || u.role === 'intern')
                         .map(u => (
                           <option key={u.id} value={u.id}>
-                            {u.name}
+                            {u.name} ({u.role.replace('_', ' ')})
                           </option>
                         ))}
                     </select>
@@ -448,16 +448,16 @@ export const InquiryDetailModal: React.FC<InquiryDetailModalProps> = ({
                   {/* Consultant */}
                   <div>
                     <label className="text-[11px] font-bold text-slate-600 block mb-1">
-                      Assigned Consultant
+                      Assigned Lead Consultant
                     </label>
                     <select
                       value={inquiry.assignedConsultantId || ''}
                       onChange={e => assignInquiry(inquiry.id, { consultantId: e.target.value })}
                       className="w-full text-xs p-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-600"
                     >
-                      <option value="">-- Select Consultant / Analyst --</option>
+                      <option value="">-- Select Lead Consultant --</option>
                       {users
-                        .filter(u => u.role === 'consultant')
+                        .filter(u => u.role === 'consultant' || u.role === 'super_admin')
                         .map(u => (
                           <option key={u.id} value={u.id}>
                             {u.name} ({u.title})
