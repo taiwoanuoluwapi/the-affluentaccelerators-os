@@ -224,6 +224,7 @@ export const ContactsList: React.FC<ContactsListProps> = ({
                   <th className="py-3 px-4">Contact Person</th>
                   <th className="py-3 px-3">Company / Organisation</th>
                   <th className="py-3 px-3">Relationship Type</th>
+                  <th className="py-3 px-3">Role Tasks</th>
                   <th className="py-3 px-3">Direct Contact</th>
                   <th className="py-3 px-3">Account Owner</th>
                   <th className="py-3 px-3">Last Interaction</th>
@@ -233,7 +234,7 @@ export const ContactsList: React.FC<ContactsListProps> = ({
               <tbody className="divide-y divide-slate-100">
                 {filteredContacts.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="py-12 text-center text-slate-400">
+                    <td colSpan={8} className="py-12 text-center text-slate-400">
                       No contacts found matching your search criteria.
                     </td>
                   </tr>
@@ -241,6 +242,8 @@ export const ContactsList: React.FC<ContactsListProps> = ({
                   filteredContacts.map(contact => {
                     const badge = getContactTypeBadge(contact.contactType);
                     const owner = users.find(u => u.id === contact.relationshipOwnerId);
+                    const tasks = contactRoleTasks.filter(t => t.contactId === contact.id);
+                    const openTasks = tasks.filter(t => t.status !== 'completed');
 
                     return (
                       <tr
@@ -275,6 +278,21 @@ export const ContactsList: React.FC<ContactsListProps> = ({
                           >
                             {badge.label}
                           </span>
+                        </td>
+
+                        <td className="py-3 px-3 whitespace-nowrap">
+                          {tasks.length > 0 ? (
+                            <span className={`inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
+                              openTasks.length > 0
+                                ? 'bg-amber-50 text-amber-900 border-amber-200'
+                                : 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                            }`}>
+                              <CheckSquare size={11} className={openTasks.length > 0 ? 'text-amber-600' : 'text-emerald-600'} />
+                              <span>{openTasks.length} pending / {tasks.length} total</span>
+                            </span>
+                          ) : (
+                            <span className="text-slate-400 text-[11px]">—</span>
+                          )}
                         </td>
 
                         <td className="py-3 px-3 whitespace-nowrap">
